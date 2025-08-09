@@ -1,9 +1,13 @@
 package com.example.societas
 
-class Greeting {
+interface GreetingService {
+    fun greet(): String
+}
+
+class Greeting : GreetingService {
     private val platform = getPlatform()
 
-    fun greet(): String {
+    override fun greet(): String {
         return "Hello, ${platform.name}!"
     }
 }
