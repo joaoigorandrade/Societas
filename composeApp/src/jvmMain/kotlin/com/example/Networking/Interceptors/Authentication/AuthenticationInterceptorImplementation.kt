@@ -1,4 +1,4 @@
-package com.example.Networking.Interceptors
+package com.example.Networking.Interceptors.Authentication
 
 import com.example.Networking.Core.NetworkResult
 import com.example.Networking.Interfaces.Interceptors.AuthenticationInterceptor
@@ -8,13 +8,13 @@ import io.ktor.http.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class AuthenticationInterceptorImpl(
+class AuthenticationInterceptorImplementation(
     private val tokenProvider: TokenProvider
 ) : AuthenticationInterceptor {
     
     private val refreshMutex = Mutex()
     
-    override val priority: Int = 100 // High priority
+    override val priority: Int = 100
     
     override suspend fun interceptRequest(request: HttpRequestBuilder): HttpRequestBuilder {
         return addAuthHeaders(request)
@@ -31,7 +31,7 @@ class AuthenticationInterceptorImpl(
     }
     
     override suspend fun <T> interceptError(error: NetworkResult.Error): NetworkResult<T> {
-        return error // Pass through for now
+        return error
     }
     
     override suspend fun addAuthHeaders(request: HttpRequestBuilder): HttpRequestBuilder {
@@ -50,7 +50,7 @@ class AuthenticationInterceptorImpl(
                     val newTokens = tokenProvider.refreshTokens(refreshToken)
                     tokenProvider.saveTokens(newTokens.accessToken, newTokens.refreshToken)
                     true
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     false
                 }
             } else {
@@ -61,18 +61,6 @@ class AuthenticationInterceptorImpl(
     
     override suspend fun handleUnauthorized(): NetworkResult<Unit> {
         tokenProvider.clearTokens()
-        // Here you could emit an event to navigate to login screen
         return NetworkResult.Success(Unit)
     }
 }
-interface TokenProvider {
-    suspend fun getAccessToken(): String?
-    suspend fun getRefreshToken(): String?
-    suspend fun saveTokens(accessToken: String, refreshToken: String?)
-    suspend fun refreshTokens(refreshToken: String): TokenPair
-    suspend fun clearTokens()
-}
-data class TokenPair(
-    val accessToken: String,
-    val refreshToken: String?
-)

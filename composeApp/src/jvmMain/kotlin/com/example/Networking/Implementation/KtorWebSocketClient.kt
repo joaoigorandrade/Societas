@@ -3,10 +3,10 @@ package com.example.Networking.Implementation
 import com.example.Networking.Core.NetworkException
 import com.example.Networking.Core.NetworkResult
 import com.example.Networking.Core.Configurations.WebSocketConfiguration
-import com.example.Networking.Interfaces.WebSocketClient
-import com.example.Networking.Interfaces.WebSocketEventListener
-import com.example.Networking.Interfaces.WebSocketMessage
-import com.example.Networking.Interfaces.WebSocketState
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketClient
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketEventListener
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketMessage
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketState
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
@@ -75,7 +75,6 @@ class KtorWebSocketClient(
             
             eventListener?.onConnected()
             
-            // Start listening for messages
             startMessageListener(session)
             
             NetworkResult.Success(Unit)
@@ -175,9 +174,6 @@ class KtorWebSocketClient(
         return connectionState.asStateFlow()
     }
     
-    /**
-     * Starts listening for incoming messages
-     */
     private fun startMessageListener(session: DefaultClientWebSocketSession) {
         scope.launch {
             try {
@@ -187,7 +183,6 @@ class KtorWebSocketClient(
                             val text = frame.readText()
                             textMessageChannel.trySend(text)
                             
-                            // Try to parse as JSON for structured messages
                             try {
                                 val message = WebSocketMessage.Json(text)
                                 messageChannel.trySend(message)
@@ -213,14 +208,12 @@ class KtorWebSocketClient(
                             connectionState.value = WebSocketState.DISCONNECTED
                             eventListener?.onDisconnected()
                             
-                            // Attempt reconnection if configured
                             if (config.reconnectAttempts > 0) {
                                 startReconnection()
                             }
                         }
                         
                         else -> {
-                            // Handle other frame types if needed
                         }
                     }
                 }
@@ -229,7 +222,6 @@ class KtorWebSocketClient(
                 connectionState.value = WebSocketState.ERROR
                 eventListener?.onError(e)
                 
-                // Attempt reconnection on error
                 if (config.reconnectAttempts > 0) {
                     startReconnection()
                 }
@@ -237,9 +229,6 @@ class KtorWebSocketClient(
         }
     }
     
-    /**
-     * Handles automatic reconnection
-     */
     private fun startReconnection() {
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
@@ -254,14 +243,10 @@ class KtorWebSocketClient(
                 }
             }
             
-            // All reconnection attempts failed
             connectionState.value = WebSocketState.ERROR
         }
     }
     
-    /**
-     * Utility functions for URL parsing
-     */
     private fun extractHost(url: String): String {
         return url.substringAfter("://").substringBefore("/").substringBefore(":")
     }
@@ -279,10 +264,7 @@ class KtorWebSocketClient(
         val path = url.substringAfter("://").substringAfter("/", "")
         return if (path.isEmpty()) "/" else "/$path"
     }
-    
-    /**
-     * Clean up resources
-     */
+
     fun close() {
         scope.cancel()
         reconnectJob?.cancel()

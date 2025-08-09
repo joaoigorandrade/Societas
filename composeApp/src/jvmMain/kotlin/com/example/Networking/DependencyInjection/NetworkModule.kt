@@ -4,9 +4,18 @@ import com.example.Networking.Core.Configurations.NetworkConfiguration
 import com.example.Networking.Core.Configurations.WebSocketConfiguration
 import com.example.Networking.Implementation.KtorHttpClient
 import com.example.Networking.Implementation.KtorWebSocketClient
-import com.example.Networking.Interceptors.*
-import com.example.Networking.Interfaces.*
 import com.example.Networking.Interfaces.Interceptors.*
+import com.example.Networking.Interfaces.Client.Http.HttpClient
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketClient
+import com.example.Networking.Token.InMemoryTokenProvider
+import com.example.Networking.Interceptors.Authentication.TokenProvider
+import com.example.Networking.Interceptors.Retry.RetryInterceptorImplementation
+import com.example.Networking.Interceptors.Logging.LoggingInterceptorImplementation
+import com.example.Networking.Interceptors.Authentication.AuthenticationInterceptorImplementation
+import com.example.Networking.Interceptors.Logging.LogLevel
+import com.example.Networking.Interceptors.Logging.ConsoleNetworkLogger
+import com.example.Networking.Manager.NetworkManager
+import com.example.Networking.Manager.NetworkManagerImplementation
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -33,18 +42,18 @@ val networkModule = module {
     }
     
     single<AuthenticationInterceptor> {
-        AuthenticationInterceptorImpl(get())
+        AuthenticationInterceptorImplementation(get())
     }
     
     single<LoggingInterceptor> {
-        LoggingInterceptorImpl(
+        LoggingInterceptorImplementation(
             logger = ConsoleNetworkLogger(),
             logLevel = LogLevel.INFO
         )
     }
     
     single<RetryInterceptor> {
-        RetryInterceptorImpl(
+        RetryInterceptorImplementation(
             maxRetries = 3,
             baseDelay = 1000L
         )
@@ -65,10 +74,6 @@ val networkModule = module {
         )
     }
     
-    single<StreamingHttpClient> {
-        get<KtorHttpClient>()
-    }
-    
     single<WebSocketClient> {
         KtorWebSocketClient(
             config = get<WebSocketConfiguration>()
@@ -76,63 +81,10 @@ val networkModule = module {
     }
     
     single<NetworkManager> {
-        NetworkManagerImpl(
+        NetworkManagerImplementation(
             httpClient = get(),
             streamingClient = get(),
             webSocketClient = get()
         )
-    }
-}
-class InMemoryTokenProvider : TokenProvider {
-    private var accessToken: String? = null
-    private var refreshToken: String? = null
-    
-    override suspend fun getAccessToken(): String? = accessToken
-    
-    override suspend fun getRefreshToken(): String? = refreshToken
-    
-    override suspend fun saveTokens(accessToken: String, refreshToken: String?) {
-        this.accessToken = accessToken
-        this.refreshToken = refreshToken
-    }
-    
-    override suspend fun refreshTokens(refreshToken: String): TokenPair {
-        return TokenPair(
-            accessToken = "new_access_token",
-            refreshToken = "new_refresh_token"
-        )
-    }
-    
-    override suspend fun clearTokens() {
-        accessToken = null
-        refreshToken = null
-    }
-}
-
-interface NetworkManager {
-    val httpClient: HttpClient
-    val streamingClient: StreamingHttpClient
-    val webSocketClient: WebSocketClient
-    
-    suspend fun initialize()
-    suspend fun cleanup()
-}
-
-class NetworkManagerImpl(
-    override val httpClient: HttpClient,
-    override val streamingClient: StreamingHttpClient,
-    override val webSocketClient: WebSocketClient
-) : NetworkManager {
-    
-    override suspend fun initialize() {
-    }
-    
-    override suspend fun cleanup() {
-        if (httpClient is KtorHttpClient) {
-            httpClient.close()
-        }
-        if (webSocketClient is KtorWebSocketClient) {
-            webSocketClient.close()
-        }
     }
 }

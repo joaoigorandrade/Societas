@@ -1,6 +1,5 @@
-package com.example.Networking.Interceptors
+package com.example.Networking.Interceptors.Retry
 
-import com.example.Networking.Core.NetworkException
 import com.example.Networking.Core.NetworkResult
 import com.example.Networking.Interfaces.Interceptors.RetryInterceptor
 import io.ktor.client.network.sockets.*
@@ -13,7 +12,7 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-class RetryInterceptorImpl(
+class RetryInterceptorImplementation(
     override val maxRetries: Int = 3,
     private val baseDelay: Long = 1000L,
     private val backoffMultiplier: Double = 2.0,

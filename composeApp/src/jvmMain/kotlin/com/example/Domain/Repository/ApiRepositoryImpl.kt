@@ -1,10 +1,10 @@
 package com.example.Domain.Repository
 
 import com.example.Networking.Core.NetworkResult
-import com.example.Networking.Interfaces.HttpClient
-import com.example.Networking.Interfaces.StreamingHttpClient
-import com.example.Networking.Interfaces.WebSocketClient
-import com.example.Networking.Interfaces.WebSocketState
+import com.example.Networking.Interfaces.Client.Http.HttpClient
+import com.example.Networking.Interfaces.Client.StreamingHttpClient
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketClient
+import com.example.Networking.Interfaces.Client.WebSocket.WebSocketState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -36,9 +36,6 @@ class ApiRepositoryImpl(
     }
 }
 
-/**
- * Implementation of RealtimeRepository using WebSocket client
- */
 class RealtimeRepositoryImpl(
     private val webSocketClient: WebSocketClient
 ) : RealtimeRepository {
@@ -65,9 +62,6 @@ class RealtimeRepositoryImpl(
     }
 }
 
-/**
- * Implementation of FileRepository using streaming HTTP client
- */
 class FileRepositoryImpl(
     private val streamingClient: StreamingHttpClient
 ) : FileRepository {

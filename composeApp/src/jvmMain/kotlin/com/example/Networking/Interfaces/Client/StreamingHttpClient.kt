@@ -1,4 +1,4 @@
-package com.example.Networking.Interfaces
+package com.example.Networking.Interfaces.Client
 
 import com.example.Networking.Core.NetworkResult
 import kotlinx.coroutines.flow.Flow

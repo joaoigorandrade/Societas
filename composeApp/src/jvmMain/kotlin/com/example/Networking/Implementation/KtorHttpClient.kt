@@ -3,9 +3,8 @@ package com.example.Networking.Implementation
 import com.example.Networking.Core.Configurations.NetworkConfiguration
 import com.example.Networking.Core.NetworkException
 import com.example.Networking.Core.NetworkResult
-import com.example.Networking.Interfaces.HttpClient
+import com.example.Networking.Interfaces.Client.Http.HttpClient
 import com.example.Networking.Interfaces.Interceptors.NetworkInterceptor
-import com.example.Networking.Interfaces.StreamingHttpClient
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -23,7 +22,7 @@ import kotlinx.serialization.json.Json
 class KtorHttpClient(
     private val config: NetworkConfiguration,
     private val interceptors: List<NetworkInterceptor> = emptyList()
-) : HttpClient, StreamingHttpClient {
+) : HttpClient {
     
     private val jsonSerializer = Json {
         prettyPrint = true
@@ -166,74 +165,6 @@ class KtorHttpClient(
             headers.forEach { (key, value) -> header(key, value) }
         }
         response.headers.toMap()
-    }
-    
-    override fun <T> getStream(
-        endpoint: String,
-        headers: Map<String, String>
-    ): Flow<NetworkResult<T>> = flow {
-        try {
-            client.prepareGet(endpoint) {
-                headers.forEach { (key, value) -> header(key, value) }
-            }.execute { response ->
-                if (response.status.isSuccess()) {
-                    @Suppress("UNCHECKED_CAST")
-                    val data: T = response.bodyAsText() as T
-                    emit(NetworkResult.Success(data))
-                } else {
-                    emit(NetworkResult.Error(
-                        NetworkException.HttpError(
-                            response.status.value,
-                            response.status.description
-                        )
-                    ))
-                }
-            }
-        } catch (e: Exception) {
-            emit(NetworkResult.Error(mapException(e)))
-        }
-    }
-    
-    override suspend fun <T> uploadFile(
-        endpoint: String,
-        fileData: ByteArray,
-        fileName: String,
-        mimeType: String,
-        headers: Map<String, String>,
-        onProgress: (Float) -> Unit
-    ): NetworkResult<T> = safeNetworkCall {
-        val response = client.post(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-            setBody(fileData)
-            contentType(ContentType.parse(mimeType))
-            
-            onUpload { bytesSentTotal, contentLength ->
-                if (contentLength != null) {
-                    val progress = bytesSentTotal.toFloat() / contentLength.toFloat()
-                    onProgress(progress)
-                }
-            }
-        }
-        @Suppress("UNCHECKED_CAST")
-        response.bodyAsText() as T
-    }
-    
-    override suspend fun downloadFile(
-        endpoint: String,
-        headers: Map<String, String>,
-        onProgress: (Float) -> Unit
-    ): NetworkResult<ByteArray> = safeNetworkCall {
-        val response = client.get(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-            
-            onDownload { bytesSentTotal, contentLength ->
-                if (contentLength != null) {
-                    val progress = bytesSentTotal.toFloat() / contentLength.toFloat()
-                    onProgress(progress)
-                }
-            }
-        }
-        response.body<ByteArray>()
     }
 
     private suspend fun <T> safeNetworkCall(call: suspend () -> T): NetworkResult<T> {

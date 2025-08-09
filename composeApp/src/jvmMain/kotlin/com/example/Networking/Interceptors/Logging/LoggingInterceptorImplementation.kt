@@ -1,16 +1,17 @@
-package com.example.Networking.Interceptors
+package com.example.Networking.Interceptors.Logging
 
 import com.example.Networking.Core.NetworkResult
 import com.example.Networking.Interfaces.Interceptors.LoggingInterceptor
+import com.example.Networking.Interceptors.Logging.NetworkLogger
+import com.example.Networking.Interceptors.Logging.LogLevel
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.client.utils.EmptyContent
 import io.ktor.http.content.*
-import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class LoggingInterceptorImpl(
+class LoggingInterceptorImplementation(
     private val logger: NetworkLogger = ConsoleNetworkLogger(),
     private val logLevel: LogLevel = LogLevel.INFO
 ) : LoggingInterceptor {
@@ -118,26 +119,5 @@ class LoggingInterceptorImpl(
             "set-cookie" -> "***"
             else -> value
         }
-    }
-}
-
-enum class LogLevel {
-    NONE, ERROR, WARN, INFO, DEBUG;
-}
-
-interface NetworkLogger {
-    fun log(level: LogLevel, message: String)
-}
-
-class ConsoleNetworkLogger : NetworkLogger {
-    override fun log(level: LogLevel, message: String) {
-        val prefix = when (level) {
-            LogLevel.ERROR -> "[ERROR]"
-            LogLevel.WARN -> "[WARN]"
-            LogLevel.INFO -> "[INFO]"
-            LogLevel.DEBUG -> "[DEBUG]"
-            LogLevel.NONE -> ""
-        }
-        println("$prefix $message")
     }
 }
