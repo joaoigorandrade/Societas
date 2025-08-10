@@ -1,4 +1,5 @@
 
+Never write comments on the code.
 # Common Backend Project Structure
 
 ### `controllers/`
