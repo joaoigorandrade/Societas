@@ -1,10 +1,11 @@
 package com.example.societas
 
-import com.example.societas.plugins.configureRouting
-import com.example.societas.plugins.configureSerialization
+import com.example.societas.Configurations.configureRouting
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
 
 const val SERVER_PORT = 8080
 
@@ -14,6 +15,8 @@ fun main() {
 }
 
 fun Application.module() {
-    configureSerialization()
+    install(ContentNegotiation) {
+        json()
+    }
     configureRouting()
 }
