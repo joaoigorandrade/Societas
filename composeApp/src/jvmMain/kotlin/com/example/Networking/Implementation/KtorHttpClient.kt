@@ -31,7 +31,7 @@ class KtorHttpClient(
         encodeDefaults = false
     }
     
-    private val client = io.ktor.client.HttpClient(CIO) {
+    val client = io.ktor.client.HttpClient(CIO) {
         install(ContentNegotiation) {
             json(jsonSerializer)
         }
@@ -147,7 +147,7 @@ class KtorHttpClient(
         Unit
     }
     
-    override suspend fun <T> head(
+        override suspend fun head(
         endpoint: String,
         headers: Map<String, String>
     ): NetworkResult<Map<String, List<String>>> = safeNetworkCall {

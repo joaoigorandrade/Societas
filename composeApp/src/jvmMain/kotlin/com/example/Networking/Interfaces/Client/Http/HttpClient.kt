@@ -33,7 +33,7 @@ interface HttpClient {
         headers: Map<String, String> = emptyMap()
     ): NetworkResult<Unit>
     
-    suspend fun <T> head(
+    suspend fun head(
         endpoint: String,
         headers: Map<String, String> = emptyMap()
     ): NetworkResult<Map<String, List<String>>>

@@ -4,9 +4,11 @@ import com.example.Networking.Core.Configurations.NetworkConfiguration
 import com.example.Networking.Core.Configurations.WebSocketConfiguration
 import com.example.Networking.Implementation.KtorHttpClient
 import com.example.Networking.Implementation.KtorWebSocketClient
+import com.example.Networking.Implementation.KtorStreamingHttpClient
 import com.example.Networking.Interfaces.Interceptors.*
 import com.example.Networking.Interfaces.Client.Http.HttpClient
 import com.example.Networking.Interfaces.Client.WebSocket.WebSocketClient
+import com.example.Networking.Interfaces.Client.StreamingHttpClient
 import com.example.Networking.Token.InMemoryTokenProvider
 import com.example.Networking.Interceptors.Authentication.TokenProvider
 import com.example.Networking.Interceptors.Retry.RetryInterceptorImplementation
@@ -77,6 +79,12 @@ val networkModule = module {
     single<WebSocketClient> {
         KtorWebSocketClient(
             config = get<WebSocketConfiguration>()
+        )
+    }
+    
+    single<StreamingHttpClient> {
+        KtorStreamingHttpClient(
+                    client = (get<HttpClient>() as KtorHttpClient).client
         )
     }
     
