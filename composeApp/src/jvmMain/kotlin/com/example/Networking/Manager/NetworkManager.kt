@@ -1,14 +1,18 @@
 package com.example.Networking.Manager
 
-import com.example.Networking.Interfaces.Client.Http.HttpClient
-import com.example.Networking.Interfaces.Client.StreamingHttpClient
-import com.example.Networking.Interfaces.Client.WebSocket.WebSocketClient
+import com.example.Networking.Interfaces.Client.Http.NetworkingOperationInterface
+import com.example.Networking.Implementation.NetworkingOperation
 
-interface NetworkManager {
-    val httpClient: HttpClient
-    val streamingClient: StreamingHttpClient
-    val webSocketClient: WebSocketClient
+class NetworkManager(
+    override val networkingOperationInterface: NetworkingOperationInterface,
+) : NetworkManagerInterface {
     
-    suspend fun initialize()
-    suspend fun cleanup()
+    override suspend fun initialize() {
+    }
+    
+    override suspend fun cleanup() {
+        if (networkingOperationInterface is NetworkingOperation) {
+            networkingOperationInterface.close()
+        }
+    }
 }
