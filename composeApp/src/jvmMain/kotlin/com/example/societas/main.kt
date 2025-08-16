@@ -3,8 +3,7 @@ package com.example.Societas
 import SocietasHomeScreen
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.example.UI.App
-import com.example.Societas.DependencyInjection.appModule
+import com.example.societas.DependencyInjection.appModule
 import org.koin.core.context.startKoin
 
 fun main() = application {
