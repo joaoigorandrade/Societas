@@ -1,9 +1,8 @@
 package com.example.Networking.Interfaces.Client.Http
 
 import com.example.Networking.Core.NetworkResult
-import kotlinx.coroutines.flow.Flow
 
-interface HttpClient {
+interface NetworkingOperationInterface {
     suspend fun <T> get(
         endpoint: String,
         headers: Map<String, String> = emptyMap(),

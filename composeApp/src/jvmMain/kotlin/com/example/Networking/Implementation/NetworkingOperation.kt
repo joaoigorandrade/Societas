@@ -3,9 +3,7 @@ package com.example.Networking.Implementation
 import com.example.Networking.Core.Configurations.NetworkConfiguration
 import com.example.Networking.Core.NetworkException
 import com.example.Networking.Core.NetworkResult
-import com.example.Networking.Interfaces.Client.Http.HttpClient
-import com.example.Networking.Interfaces.Interceptors.NetworkInterceptor
-import io.ktor.client.call.*
+import com.example.Networking.Interfaces.Client.Http.NetworkingOperationInterface
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -15,14 +13,11 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.util.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 
-class KtorHttpClient(
+class NetworkingOperation(
     private val config: NetworkConfiguration,
-    private val interceptors: List<NetworkInterceptor> = emptyList()
-) : HttpClient {
+) : NetworkingOperationInterface {
     
     private val jsonSerializer = Json {
         prettyPrint = true
@@ -53,19 +48,6 @@ class KtorHttpClient(
             url(config.baseUrl)
             config.headers.forEach { (key, value) ->
                 header(key, value)
-            }
-        }
-        
-        install("CustomInterceptors") {
-            interceptors.sortedByDescending { it.priority }.forEach { interceptor ->
-                sendPipeline.intercept(HttpSendPipeline.Before) {
-                    val modifiedContext = interceptor.interceptRequest(context)
-                    proceedWith(modifiedContext)
-                }
-                
-                receivePipeline.intercept(HttpReceivePipeline.After) { response ->
-                    proceedWith(interceptor.interceptResponse(response))
-                }
             }
         }
     }
@@ -172,12 +154,7 @@ class KtorHttpClient(
             val result = call()
             NetworkResult.Success(result)
         } catch (e: Exception) {
-            var error = NetworkResult.Error(mapException(e))
-            
-            interceptors.forEach { interceptor ->
-                error = interceptor.interceptError<T>(error) as NetworkResult.Error
-            }
-            
+            val error = NetworkResult.Error(mapException(e))
             error
         }
     }
@@ -186,11 +163,11 @@ class KtorHttpClient(
         return when (exception) {
             is ClientRequestException -> NetworkException.HttpError(
                 exception.response.status.value,
-                exception.message ?: "Client error"
+                exception.message
             )
             is ServerResponseException -> NetworkException.HttpError(
                 exception.response.status.value,
-                exception.message ?: "Server error"
+                exception.message
             )
             is HttpRequestTimeoutException -> NetworkException.TimeoutError(
                 exception.message ?: "Request timeout"
