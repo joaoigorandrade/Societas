@@ -4,6 +4,8 @@ import com.example.Networking.Core.Configurations.NetworkConfiguration
 import com.example.Networking.Core.NetworkException
 import com.example.Networking.Core.NetworkResult
 import com.example.Networking.Interfaces.Client.Http.NetworkingOperationInterface
+import com.example.Networking.Interfaces.RequestInterface
+import com.example.Networking.RequestParameters
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -12,38 +14,36 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.util.*
 import kotlinx.serialization.json.Json
-
 class NetworkingOperation(
     private val config: NetworkConfiguration,
 ) : NetworkingOperationInterface {
-    
+
     private val jsonSerializer = Json {
         prettyPrint = true
         isLenient = true
         ignoreUnknownKeys = true
         encodeDefaults = false
     }
-    
+
     val client = io.ktor.client.HttpClient(CIO) {
         install(ContentNegotiation) {
             json(jsonSerializer)
         }
-        
+
         if (config.enableLogging) {
             install(Logging) {
                 logger = Logger.DEFAULT
                 level = LogLevel.INFO
             }
         }
-        
+
         install(HttpTimeout) {
             requestTimeoutMillis = config.timeout
             connectTimeoutMillis = config.connectTimeout
             socketTimeoutMillis = config.socketTimeout
         }
-        
+
         defaultRequest {
             url(config.baseUrl)
             config.headers.forEach { (key, value) ->
@@ -51,102 +51,70 @@ class NetworkingOperation(
             }
         }
     }
-    
-    override suspend fun <T> get(
-        endpoint: String,
-        headers: Map<String, String>,
-        queryParams: Map<String, String>
-    ): NetworkResult<T> = safeNetworkCall {
-        val response = client.get(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-            queryParams.forEach { (key, value) -> parameter(key, value) }
+
+    override suspend fun <T> execute(request: RequestInterface): NetworkResult<T> = safeNetworkCall {
+        val response = when (request.method) {
+            HttpMethod.Get -> client.get(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+                when (val params = request.parameters) {
+                    is RequestParameters.Query -> params.params.forEach { (k, v) -> url.parameters.append(k, v) }
+                    else -> Unit
+                }
+            }
+
+            HttpMethod.Post -> client.post(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+                contentType(ContentType.Application.Json)
+                when (val params = request.parameters) {
+                    is RequestParameters.Body -> setBody(params.data)
+                    is RequestParameters.Query -> params.params.forEach { (k, v) -> url.parameters.append(k, v) }
+                    is RequestParameters.None -> Unit
+                }
+            }
+
+            HttpMethod.Put -> client.put(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+                contentType(ContentType.Application.Json)
+                when (val params = request.parameters) {
+                    is RequestParameters.Body -> setBody(params.data)
+                    is RequestParameters.Query -> params.params.forEach { (k, v) -> url.parameters.append(k, v) }
+                    is RequestParameters.None -> Unit
+                }
+            }
+
+            HttpMethod.Delete -> client.delete(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+            }
+
+            HttpMethod.Patch -> client.patch(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+                contentType(ContentType.Application.Json)
+                when (val params = request.parameters) {
+                    is RequestParameters.Body -> setBody(params.data)
+                    is RequestParameters.Query -> params.params.forEach { (k, v) -> url.parameters.append(k, v) }
+                    is RequestParameters.None -> Unit
+                }
+            }
+
+            HttpMethod.Head -> client.head(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+            }
+
+            HttpMethod.Options -> client.options(request.path) {
+                request.headers?.forEach { (key, value) -> header(key, value) }
+            }
+            else -> client.request(request.path) {
+                method = request.method
+                request.headers?.forEach { (key, value) -> header(key, value) }
+                when (val params = request.parameters) {
+                    is RequestParameters.Body -> setBody(params.data)
+                    is RequestParameters.Query -> params.params.forEach { (k, v) -> url.parameters.append(k, v) }
+                    is RequestParameters.None -> Unit
+                }
+            }
         }
         @Suppress("UNCHECKED_CAST")
         response.bodyAsText() as T
-    }
-    
-    override suspend fun <T, R> post(
-        endpoint: String,
-        body: T,
-        headers: Map<String, String>
-    ): NetworkResult<R> = safeNetworkCall {
-        val response = client.post(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-            contentType(ContentType.Application.Json)
-            when (body) {
-                is String -> setBody(body)
-                is ByteArray -> setBody(body)
-                else -> setBody(body.toString())
-            }
-        }
-        @Suppress("UNCHECKED_CAST")
-        response.bodyAsText() as R
-    }
-    
-    override suspend fun <T, R> put(
-        endpoint: String,
-        body: T,
-        headers: Map<String, String>
-    ): NetworkResult<R> = safeNetworkCall {
-        val response = client.put(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-            contentType(ContentType.Application.Json)
-            when (body) {
-                is String -> setBody(body)
-                is ByteArray -> setBody(body)
-                else -> setBody(body.toString())
-            }
-        }
-        @Suppress("UNCHECKED_CAST")
-        response.bodyAsText() as R
-    }
-    
-    override suspend fun <T, R> patch(
-        endpoint: String,
-        body: T,
-        headers: Map<String, String>
-    ): NetworkResult<R> = safeNetworkCall {
-        val response = client.patch(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-            contentType(ContentType.Application.Json)
-            when (body) {
-                is String -> setBody(body)
-                is ByteArray -> setBody(body)
-                else -> setBody(body.toString())
-            }
-        }
-        @Suppress("UNCHECKED_CAST")
-        response.bodyAsText() as R
-    }
-    
-    override suspend fun delete(
-        endpoint: String,
-        headers: Map<String, String>
-    ): NetworkResult<Unit> = safeNetworkCall {
-        client.delete(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-        }
-        Unit
-    }
-    
-        override suspend fun head(
-        endpoint: String,
-        headers: Map<String, String>
-    ): NetworkResult<Map<String, List<String>>> = safeNetworkCall {
-        val response = client.head(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-        }
-        response.headers.toMap()
-    }
-    
-    override suspend fun <T> options(
-        endpoint: String,
-        headers: Map<String, String>
-    ): NetworkResult<Map<String, List<String>>> = safeNetworkCall {
-        val response = client.options(endpoint) {
-            headers.forEach { (key, value) -> header(key, value) }
-        }
-        response.headers.toMap()
     }
 
     private suspend fun <T> safeNetworkCall(call: suspend () -> T): NetworkResult<T> {
@@ -158,26 +126,28 @@ class NetworkingOperation(
             error
         }
     }
-    
+
     private fun mapException(exception: Exception): NetworkException {
         return when (exception) {
             is ClientRequestException -> NetworkException.HttpError(
                 exception.response.status.value,
                 exception.message
             )
+
             is ServerResponseException -> NetworkException.HttpError(
                 exception.response.status.value,
                 exception.message
             )
+
             is HttpRequestTimeoutException -> NetworkException.TimeoutError(
                 exception.message ?: "Request timeout"
             )
+
             else -> NetworkException.UnknownError(
                 exception.message ?: "Unknown error occurred"
             )
         }
     }
-
     fun close() {
         client.close()
     }

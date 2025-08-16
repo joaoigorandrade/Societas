@@ -2,6 +2,7 @@ package com.example.Domain.UseCase.Home
 
 import com.example.Domain.Repository.ApiRepositoryInterface
 import com.example.Networking.Core.NetworkResult
+import com.example.Networking.Interfaces.SocietasRequest
 import com.example.UI.Screens.Home.SocietasHomeScreenModel
 import com.example.UI.Screens.SocietasViewState
 import kotlinx.coroutines.delay
@@ -18,12 +19,10 @@ class SocietasHomeUseCase(
 
         while (attemptCount < maxRetries) {
             try {
-                val response = withTimeout(timeoutSeconds.seconds) {
-                    repository.post<Map<String, String>, SocietasHomeScreenModel>(
-                        "http://localhost:3000/home",
-                        mapOf("userId" to "user1")
-                    )
-                }
+                val response: NetworkResult<SocietasHomeScreenModel> =
+                    withTimeout(timeoutSeconds.seconds) {
+                        repository.execute(SocietasRequest.Home)
+                    }
 
                 return when (response) {
                     is NetworkResult.Success -> {
@@ -39,7 +38,7 @@ class SocietasHomeUseCase(
                         if (attemptCount >= maxRetries) {
                             SocietasViewState.Error("API call failed after $maxRetries attempts: ${response.message}")
                         } else {
-                            delay(1000L * attemptCount) // Exponential backoff
+                            delay(1000L * attemptCount)
                             continue
                         }
                     }
