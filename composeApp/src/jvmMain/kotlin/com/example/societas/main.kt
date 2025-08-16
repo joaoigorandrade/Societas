@@ -1,5 +1,6 @@
 package com.example.Societas
 
+import SocietasHomeScreen
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.example.UI.App
@@ -15,6 +16,6 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "societas",
     ) {
-        App()
+        SocietasHomeScreen()
     }
 }

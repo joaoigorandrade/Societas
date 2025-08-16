@@ -22,7 +22,6 @@ import societas.composeapp.generated.resources.Res
 import societas.composeapp.generated.resources.compose_multiplatform
 
 @Composable
-@Preview
 fun App() {
     val greetingService: GreetingService = koinInject()
     
