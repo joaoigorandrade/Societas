@@ -19,8 +19,7 @@ class SocietasHomeScreenViewModel(private val useCase: SocietasHomeUseCase) {
 
     private fun loadData() {
         scope.launch {
-            val data = useCase.execute()
-            _uiState.value = SocietasViewState.Success(data)
+            _uiState.value = useCase.execute()
         }
     }
 }
