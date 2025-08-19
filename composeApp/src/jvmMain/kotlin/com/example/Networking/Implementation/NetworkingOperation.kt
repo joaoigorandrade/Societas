@@ -1,8 +1,6 @@
 package com.example.Networking.Implementation
 
 import com.example.Networking.Core.Configurations.NetworkConfiguration
-import com.example.Networking.Core.NetworkException
-import com.example.Networking.Core.NetworkResult
 import com.example.Networking.Interfaces.Client.Http.NetworkingOperationInterface
 import com.example.Networking.Interfaces.RequestInterface
 import com.example.Networking.RequestParameters
@@ -15,6 +13,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+
 class NetworkingOperation(
     private val config: NetworkConfiguration,
 ) : NetworkingOperationInterface {
@@ -52,8 +51,8 @@ class NetworkingOperation(
         }
     }
 
-    override suspend fun <T> execute(request: RequestInterface): NetworkResult<T> = safeNetworkCall {
-        val response = when (request.method) {
+    override suspend fun executeRaw(request: RequestInterface): HttpResponse {
+        return when (request.method) {
             HttpMethod.Get -> client.get(request.path) {
                 request.headers?.forEach { (key, value) -> header(key, value) }
                 when (val params = request.parameters) {
@@ -113,41 +112,8 @@ class NetworkingOperation(
                 }
             }
         }
-        @Suppress("UNCHECKED_CAST")
-        response.bodyAsText() as T
     }
 
-    private suspend fun <T> safeNetworkCall(call: suspend () -> T): NetworkResult<T> {
-        return try {
-            val result = call()
-            NetworkResult.Success(result)
-        } catch (e: Exception) {
-            val error = NetworkResult.Error(mapException(e))
-            error
-        }
-    }
-
-    private fun mapException(exception: Exception): NetworkException {
-        return when (exception) {
-            is ClientRequestException -> NetworkException.HttpError(
-                exception.response.status.value,
-                exception.message
-            )
-
-            is ServerResponseException -> NetworkException.HttpError(
-                exception.response.status.value,
-                exception.message
-            )
-
-            is HttpRequestTimeoutException -> NetworkException.TimeoutError(
-                exception.message ?: "Request timeout"
-            )
-
-            else -> NetworkException.UnknownError(
-                exception.message ?: "Unknown error occurred"
-            )
-        }
-    }
     fun close() {
         client.close()
     }
