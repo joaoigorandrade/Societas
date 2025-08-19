@@ -14,26 +14,25 @@ fun SocietasHomeScreen(modifier: Modifier = Modifier) {
     val viewModel: SocietasHomeScreenViewModel = koinInject()
     val uiState = viewModel.uiState.collectAsState()
 
-//    when(val state = uiState.value) {
-//        is SocietasViewState.Success -> {
-//            SocietasHomeScreenSuccessState()
-//        }
-//        is SocietasViewState.Loading -> {
-//            Box(
-//                modifier = modifier.fillMaxSize(),
-//                contentAlignment = androidx.compose.ui.Alignment.Center
-//            ) {
-//                CircularProgressIndicator()
-//            }
-//        }
-//        is SocietasViewState.Error -> {
-//            Box(
-//                modifier = modifier.fillMaxSize(),
-//                contentAlignment = androidx.compose.ui.Alignment.Center
-//            ) {
-//                Text(text = state.message)
-//            }
-//        }
-//    }
-    SocietasHomeScreenSuccessState()
+    when(val state = uiState.value) {
+        is SocietasViewState.Success -> {
+            SocietasHomeScreenSuccessState()
+        }
+        is SocietasViewState.Loading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is SocietasViewState.Error -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                Text(text = state.message)
+            }
+        }
+    }
 }
