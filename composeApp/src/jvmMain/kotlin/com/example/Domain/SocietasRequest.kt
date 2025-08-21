@@ -28,11 +28,11 @@ sealed class SocietasRequest : RequestInterface {
             get() = null
     }
 
-    data class GetMessages(val userId: String, val chatId: String) : SocietasRequest() {
+    data class GetMessages(val userId: String, val agentId: String) : SocietasRequest() {
         override val method: HttpMethod
             get() = HttpMethod.Get
         override val path: String
-            get() = "/api/$userId/$chatId"
+            get() = "/api/users/$userId/chats/with/$agentId"
         override val parameters: RequestParameters
             get() = RequestParameters.None
         override val headers: Map<String, String>?

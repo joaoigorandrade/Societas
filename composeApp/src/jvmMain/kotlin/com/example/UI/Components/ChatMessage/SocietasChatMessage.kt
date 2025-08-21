@@ -19,7 +19,7 @@ fun SocietasChatMessage(
     modifier: Modifier = Modifier,
 ) {
 
-    val isUserMessage = message.author == "User"
+    val isUserMessage = message.author == "6qDU3re3ejbpIdman0WL"
 
     val arrangement = if (isUserMessage) Arrangement.End else Arrangement.Start
 

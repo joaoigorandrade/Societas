@@ -30,7 +30,7 @@ class SocietasHomeScreenViewModel(
 
     init {
         loadData()
-        loadMessages("user-12345", "chat-67890") // Fake IDs
+        loadMessages("6qDU3re3ejbpIdman0WL", "AncYesBqGpaowFCKwOQR") // Fake IDs
     }
 
     fun sendMessage(agentId: String, message: String) {
@@ -41,10 +41,10 @@ class SocietasHomeScreenViewModel(
         }
     }
 
-    private fun loadMessages(userId: String, chatId: String) {
+    private fun loadMessages(userId: String, agentId: String) {
         scope.launch {
             _messageState.value = MessageViewState.Loading
-            when (val result = getMessagesUseCase.execute(userId, chatId)) {
+            when (val result = getMessagesUseCase.execute(userId, agentId)) {
                 is NetworkResult.Success -> {
                     _messages.value = result.data
                     _messageState.value = MessageViewState.Success
