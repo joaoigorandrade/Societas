@@ -3,7 +3,7 @@ import com.example.Domain.UseCase.Message.GetMessagesUseCase
 import com.example.Domain.UseCase.Message.SendMessageUseCase
 import com.example.Networking.Core.NetworkResult
 import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
-import com.example.UI.Screens.Home.MessageViewState
+import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanelViewState
 import com.example.UI.Screens.SocietasViewState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,7 @@ class SocietasHomeScreenViewModel(
     private val _messages = MutableStateFlow<List<SocietasChatMessageModel>>(emptyList())
     val messages = _messages.asStateFlow()
 
-    private val _messageState = MutableStateFlow<MessageViewState>(MessageViewState.Idle)
+    private val _messageState = MutableStateFlow<ChatPanelViewState>(ChatPanelViewState.Idle)
     val messageState = _messageState.asStateFlow()
 
     init {
@@ -43,14 +43,14 @@ class SocietasHomeScreenViewModel(
 
     private fun loadMessages(userId: String, agentId: String) {
         scope.launch {
-            _messageState.value = MessageViewState.Loading
+            _messageState.value = ChatPanelViewState.Loading
             when (val result = getMessagesUseCase.execute(userId, agentId)) {
                 is NetworkResult.Success -> {
                     _messages.value = result.data
-                    _messageState.value = MessageViewState.Success
+                    _messageState.value = ChatPanelViewState.Success
                 }
                 is NetworkResult.Error -> {
-                    _messageState.value = MessageViewState.Error(result.message)
+                    _messageState.value = ChatPanelViewState.Error(result.message)
                 }
                 else -> { /* No-op for loading state */ }
             }
