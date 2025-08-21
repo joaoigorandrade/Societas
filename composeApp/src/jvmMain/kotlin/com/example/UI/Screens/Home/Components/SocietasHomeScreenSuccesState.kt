@@ -34,27 +34,35 @@ import com.example.UI.Components.ChatMessage.SocietasChatMessage
 import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
 import com.example.UI.Components.Input.SocietasMessageInput
 import com.example.UI.Components.Item.SocietasItem
+import com.example.UI.Screens.Home.SocietasHomeScreenModel
 
 @Composable
-fun SocietasHomeScreenSuccessState() {
+fun SocietasHomeScreenSuccessState(model: SocietasHomeScreenModel) {
     Row(modifier = Modifier.fillMaxSize()) {
         sideBar(
             modifier = Modifier
                 .fillMaxHeight()
-                .weight(1f)
+                .weight(1f),
+            agents = model.cBoard,
+            enterprise = model.enterprise
         )
 
         chatPanel(
             modifier = Modifier
                 .fillMaxHeight()
-                .weight(3f)
+                .weight(3f),
+            model = model
         )
     }
 }
 
 @Composable
-private fun sideBar(modifier: Modifier = Modifier) {
-    var selectedItem by remember { mutableStateOf("Financial") }
+private fun sideBar(
+    modifier: Modifier = Modifier,
+    agents: Array<SocietasHomeScreenModel.Agent>,
+    enterprise: String
+) {
+    var selectedItem by remember { mutableStateOf(agents.firstOrNull()?.name ?: "") }
 
     Surface(
         color = Color(0xFF353755),
@@ -66,7 +74,7 @@ private fun sideBar(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                text = "Command Center",
+                text = enterprise,
                 color = Color.Gray,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
@@ -80,18 +88,12 @@ private fun sideBar(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            val items = listOf(
-                "Chief Financial Officer",
-                "Chief Marketing Officer",
-                "Head of Engineering"
-            )
-
-            items.forEach { itemText ->
+            agents.forEach { agent ->
                 SocietasItem(
-                    text = itemText,
-                    isSelected = (selectedItem == itemText),
+                    text = agent.name,
+                    isSelected = (selectedItem == agent.name),
                     onClick = {
-                        selectedItem = itemText
+                        selectedItem = agent.name
                     }
                 )
             }
@@ -101,7 +103,10 @@ private fun sideBar(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun chatPanel(modifier: Modifier = Modifier) {
+private fun chatPanel(
+    modifier: Modifier = Modifier,
+    model: SocietasHomeScreenModel
+) {
     val sampleMessages = listOf(
         SocietasChatMessageModel(
             "What was our operating margin for Q2 2025?",
@@ -122,10 +127,10 @@ private fun chatPanel(modifier: Modifier = Modifier) {
             .background(Color(0xFF353739))
             .padding(16.dp)
     ) {
-        chatPanelHeader()
+        chatPanelHeader(model.userName)
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp) // Adds space between bubbles
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(sampleMessages) { message ->
                 SocietasChatMessage(message = message)
@@ -136,7 +141,10 @@ private fun chatPanel(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun chatPanelHeader(modifier: Modifier = Modifier) {
+private fun chatPanelHeader(
+    userName: String,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -144,7 +152,7 @@ private fun chatPanelHeader(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Header Area", color = Color.White)
+        Text(userName, color = Color.White)
         Row() {
             Icon(
                 imageVector = Icons.Default.Person,

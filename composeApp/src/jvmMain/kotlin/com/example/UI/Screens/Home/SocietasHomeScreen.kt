@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.example.UI.Screens.Home.Components.SocietasHomeScreenSuccessState
+import com.example.UI.Screens.Home.SocietasHomeScreenModel
 import com.example.UI.Screens.SocietasViewState
 import org.koin.compose.koinInject
 
@@ -16,7 +17,7 @@ fun SocietasHomeScreen(modifier: Modifier = Modifier) {
 
     when(val state = uiState.value) {
         is SocietasViewState.Success -> {
-            SocietasHomeScreenSuccessState()
+            SocietasHomeScreenSuccessState(state.data as SocietasHomeScreenModel)
         }
         is SocietasViewState.Loading -> {
             Box(
