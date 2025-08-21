@@ -1,29 +1,17 @@
 package com.example.UI.Screens.Home.Components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,24 +22,43 @@ import com.example.UI.Components.ChatMessage.SocietasChatMessage
 import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
 import com.example.UI.Components.Input.SocietasMessageInput
 import com.example.UI.Components.Item.SocietasItem
+import com.example.UI.Screens.Home.MessageViewState
 import com.example.UI.Screens.Home.SocietasHomeScreenModel
 
 @Composable
-fun SocietasHomeScreenSuccessState(model: SocietasHomeScreenModel) {
+fun SocietasHomeScreenSuccessState(
+    model: SocietasHomeScreenModel,
+    messages: List<SocietasChatMessageModel>,
+    messageViewState: MessageViewState,
+    onSendMessage: (agentId: String, message: String) -> Unit
+) {
+    var selectedAgent by remember { mutableStateOf(model.cBoard.firstOrNull()) }
+
     Row(modifier = Modifier.fillMaxSize()) {
         sideBar(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(1f),
             agents = model.cBoard,
-            enterprise = model.enterprise
+            enterprise = model.enterprise,
+            selectedAgentName = selectedAgent?.name ?: "",
+            onAgentSelected = { agent ->
+                selectedAgent = agent
+            }
         )
 
         chatPanel(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(3f),
-            model = model
+            model = model,
+            messages = messages,
+            messageViewState = messageViewState,
+            onSendMessage = {
+                selectedAgent?.let { agent ->
+                    onSendMessage(agent.name, it)
+                }
+            }
         )
     }
 }
@@ -60,10 +67,10 @@ fun SocietasHomeScreenSuccessState(model: SocietasHomeScreenModel) {
 private fun sideBar(
     modifier: Modifier = Modifier,
     agents: Array<SocietasHomeScreenModel.Agent>,
-    enterprise: String
+    enterprise: String,
+    selectedAgentName: String,
+    onAgentSelected: (SocietasHomeScreenModel.Agent) -> Unit
 ) {
-    var selectedItem by remember { mutableStateOf(agents.firstOrNull()?.name ?: "") }
-
     Surface(
         color = Color(0xFF353755),
         modifier = modifier.fillMaxWidth()
@@ -91,10 +98,8 @@ private fun sideBar(
             agents.forEach { agent ->
                 SocietasItem(
                     text = agent.name,
-                    isSelected = (selectedItem == agent.name),
-                    onClick = {
-                        selectedItem = agent.name
-                    }
+                    isSelected = (selectedAgentName == agent.name),
+                    onClick = { onAgentSelected(agent) }
                 )
             }
 
@@ -105,38 +110,46 @@ private fun sideBar(
 @Composable
 private fun chatPanel(
     modifier: Modifier = Modifier,
-    model: SocietasHomeScreenModel
+    model: SocietasHomeScreenModel,
+    messages: List<SocietasChatMessageModel>,
+    messageViewState: MessageViewState,
+    onSendMessage: (String) -> Unit
 ) {
-    val sampleMessages = listOf(
-        SocietasChatMessageModel(
-            "What was our operating margin for Q2 2025?",
-            "User"
-        ),
-        SocietasChatMessageModel(
-            "Our operating margin for Q2 2025 was 18.7%. This is an increase from 16.2% in Q1 2025, primarily driven by reduced operational expenditure.",
-            "CFO"
-        ),
-        SocietasChatMessageModel(
-            "Show me the breakdown of that OpEx reduction.",
-            "User"
-        )
-    )
-
     Column(
         modifier = modifier
             .background(Color(0xFF353739))
             .padding(16.dp)
     ) {
         chatPanelHeader(model.userName)
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(sampleMessages) { message ->
-                SocietasChatMessage(message = message)
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            when (messageViewState) {
+                is MessageViewState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is MessageViewState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(messages) { message ->
+                            SocietasChatMessage(message = message)
+                        }
+                    }
+                }
+                is MessageViewState.Error -> {
+                    Text(
+                        text = messageViewState.message,
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is MessageViewState.Idle -> { /* Do nothing */ }
             }
         }
-        SocietasMessageInput(modifier = Modifier.fillMaxWidth())
+        SocietasMessageInput(
+            modifier = Modifier.fillMaxWidth(),
+            onSendMessage = onSendMessage
+        )
     }
 }
 

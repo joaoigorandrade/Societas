@@ -21,11 +21,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SocietasMessageInput(modifier: Modifier = Modifier) {
+fun SocietasMessageInput(
+    modifier: Modifier = Modifier,
+    onSendMessage: (String) -> Unit
+) {
     var text by remember { mutableStateOf("") }
 
     Row(
-        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
         TextField(
             value = text,
@@ -43,7 +46,12 @@ fun SocietasMessageInput(modifier: Modifier = Modifier) {
             )
         )
 
-        IconButton(onClick = {  }) {
+        IconButton(onClick = {
+            if (text.isNotBlank()) {
+                onSendMessage(text)
+                text = ""
+            }
+        }) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Send Message", tint = Color.White
             )

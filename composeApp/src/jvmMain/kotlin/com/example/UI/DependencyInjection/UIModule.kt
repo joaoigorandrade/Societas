@@ -4,5 +4,5 @@ import SocietasHomeScreenViewModel
 import org.koin.dsl.module
 
 val uiModule = module {
-    factory { SocietasHomeScreenViewModel(get()) }
+    factory { SocietasHomeScreenViewModel(get(), get(), get()) }
 }
