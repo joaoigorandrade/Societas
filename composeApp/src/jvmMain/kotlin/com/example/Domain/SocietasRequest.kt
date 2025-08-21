@@ -21,7 +21,7 @@ sealed class SocietasRequest : RequestInterface {
         override val method: HttpMethod
             get() = HttpMethod.Post
         override val path: String
-            get() = "/api/message"
+            get() = "/api/users/message"
         override val parameters: RequestParameters
             get() = RequestParameters.Body(body)
         override val headers: Map<String, String>?

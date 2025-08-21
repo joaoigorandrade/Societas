@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanelViewModel
 import com.example.UI.Screens.Home.Components.SocietasHomeScreenSuccessState
 import com.example.UI.Screens.Home.SocietasHomeScreenModel
 import com.example.UI.Screens.SocietasViewState
@@ -14,17 +15,14 @@ import org.koin.compose.koinInject
 @Composable
 fun SocietasHomeScreen(modifier: Modifier = Modifier) {
     val viewModel: SocietasHomeScreenViewModel = koinInject()
+    val chatPanelViewModel: ChatPanelViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
-    val messages by viewModel.messages.collectAsState()
-    val messageState by viewModel.messageState.collectAsState()
 
     when(val state = uiState) {
         is SocietasViewState.Success -> {
             SocietasHomeScreenSuccessState(
                 model = state.data as SocietasHomeScreenModel,
-                messages = messages,
-                messageViewState = messageState,
-                onSendMessage = viewModel::sendMessage
+                chatPanelViewModel = chatPanelViewModel
             )
         }
         is SocietasViewState.Loading -> {

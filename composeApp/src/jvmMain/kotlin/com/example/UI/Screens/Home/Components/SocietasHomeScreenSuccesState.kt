@@ -9,20 +9,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
 import com.example.UI.Components.Item.SocietasItem
 import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanel
-import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanelViewState
+import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanelViewModel
 import com.example.UI.Screens.Home.SocietasHomeScreenModel
 
 @Composable
 fun SocietasHomeScreenSuccessState(
     model: SocietasHomeScreenModel,
-    messages: List<SocietasChatMessageModel>,
-    messageViewState: ChatPanelViewState,
-    onSendMessage: (agentId: String, message: String) -> Unit
+    chatPanelViewModel: ChatPanelViewModel
 ) {
     var selectedAgent by remember { mutableStateOf(model.cBoard.firstOrNull()) }
+    val messages by chatPanelViewModel.messages.collectAsState()
+    val messageViewState by chatPanelViewModel.messageState.collectAsState()
+
+    LaunchedEffect(selectedAgent) {
+        selectedAgent?.let {
+            // Fake user ID
+            chatPanelViewModel.loadMessages("6qDU3re3ejbpIdman0WL", it.id)
+        }
+    }
 
     Row(modifier = Modifier.fillMaxSize()) {
         sideBar(
@@ -44,9 +50,9 @@ fun SocietasHomeScreenSuccessState(
             model = model,
             messages = messages,
             messageViewState = messageViewState,
-            onSendMessage = {
+            onSendMessage = { message ->
                 selectedAgent?.let { agent ->
-                    onSendMessage(agent.name, it)
+                    chatPanelViewModel.sendMessage(agent.name, message)
                 }
             }
         )

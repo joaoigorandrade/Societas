@@ -25,6 +25,7 @@ The data flows in a unidirectional stream:
 -   **Networking**: Ktor
 -   **Asynchronous Operations**: Kotlin Coroutines & `StateFlow`
 -   **Serialization**: `kotlinx.serialization`
+-   **Navigation**: Custom-built, decoupled navigation framework
 
 ## 3. Project Structure
 
@@ -39,13 +40,15 @@ The `composeApp` module is organized into packages that reflect its clean archit
         -   `Components/`: Screen-specific, reusable Composables.
     -   `Components/`: Global, reusable UI components (e.g., `SocietasChatMessage`, `SocietasMessageInput`).
 -   `Domain/`: The core business logic, completely independent of UI and data frameworks.
-    -   `UseCase/`: Contains UseCase classes that encapsulate specific business rules (e.g., `SocietasHomeUseCase`).
+    -   `UseCase/`: Contains UseCase classes that encapsulate specific business rules (e.g., `SocietasHomeUseCase`, `SendMessageUseCase`, `GetMessagesUseCase`).
     -   `Repository/`: Defines repository interfaces (`ApiRepositoryInterface`) and includes the concrete implementation (`ApiRepository`).
 -   `Networking/`: A self-contained, reusable networking module.
     -   `Core/`: Defines foundational types like `NetworkResult`, `NetworkException`, and `NetworkConfiguration`.
     -   `Interfaces/`: Defines contracts for requests (`RequestInterface`) and the networking client (`NetworkingOperationInterface`).
     -   `Implementation/`: The Ktor-based implementation of the networking client.
 -   `Navigation/`: A custom-built, decoupled navigation framework.
+    -   `core/`: Contains the core navigation components like `NavigationHost`, `NavigationRouter`, and `NavigationStack`.
+    -   `api/`: Defines the public API for navigation, including `Route`, `RouteConfig`, and `Navigator`.
 
 ## 4. Deep Dive into Core Modules
 
@@ -86,7 +89,7 @@ The networking layer is designed to be robust and reusable. It is built on Ktor.
 
 This layer orchestrates the flow of data and applies business rules.
 
--   **UseCases**: The `SocietasHomeUseCase` is a prime example. It contains business logic that is more complex than a simple data fetch. It implements its own **retry and timeout mechanism** that wraps the repository call, ensuring resilience.
+-   **UseCases**: The `SocietasHomeUseCase` is a prime example. It contains business logic that is more complex than a simple data fetch. It implements its own **retry and timeout mechanism** that wraps the repository call, ensuring resilience. The `SendMessageUseCase` and `GetMessagesUseCase` handle the logic for sending and retrieving messages, respectively.
 
     ```kotlin
     // From: Domain/UseCase/Home/SocietasHomeUseCase.kt
@@ -122,13 +125,21 @@ The UI is purely a function of the state, following a declarative pattern.
     }
     ```
 
+### Navigation
+
+The application uses a custom-built navigation framework that is decoupled from the UI.
+
+-   **NavigationHost**: The `NavigationHost` is the central component that builds the navigation graph. It takes a list of `RouteConfig` objects and an initial route.
+-   **NavigationRouter**: The `NavigationRouter` is responsible for managing the navigation stack and executing navigation commands (e.g., `push`, `pop`).
+-   **RouteConfig**: Each `RouteConfig` defines a route and the Composable content to display for that route.
+
 ### Dependency Injection with Koin
 
 Koin is used to wire all the components together.
 
 -   **Modular Configuration**: Each architectural layer has its own Koin module (`networkModule`, `domainModule`, `uiModule`).
 -   **Providing Dependencies**: Dependencies are declared as `single` (singleton) or `factory` (new instance every time).
--   **Named Injections**: The `networkModule` provides different `NetworkConfiguration` instances using named qualifiers (`development`, `production`), allowing the application to be configured for different environments easily.
+-   **Named Injections**: The `networkModule` provides different `NetworkConfiguration` instances using named qualifiers (`development`, `production`), allowing the application to be configured for different environments easily. To switch between environments, you can change the `named<NetworkConfiguration>` injection in the `ApiRepository` definition in the `domainModule`.
 -   **Injection**: Dependencies are injected into classes via their constructors. In Composable functions, the `koinInject()` delegate is used to retrieve instances like ViewModels.
 
 ## 5. Setup and Run
@@ -137,4 +148,10 @@ To build and run the application, execute the following Gradle command from the 
 
 ```bash
 ./gradlew :composeApp:run
+```
+
+To build the native distributions (DMG, MSI, DEB), run:
+
+```bash
+./gradlew :composeApp:package
 ```
