@@ -1,161 +1,295 @@
 package com.example.UI.Screens.Home.Components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.UI.Components.ChatMessage.SocietasChatMessage
-import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
-import com.example.UI.Components.Input.SocietasMessageInput
-import com.example.UI.Components.Item.SocietasItem
+import com.example.UI.DesignSystem.Components.*
+import com.example.UI.DesignSystem.SocietasIcons
+import com.example.UI.DesignSystem.societasDesignSystem
+import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanel
+import com.example.UI.Screens.Home.SocietasHomeScreenModel
 
 @Composable
-fun SocietasHomeScreenSuccessState() {
-    Row(modifier = Modifier.fillMaxSize()) {
-        sideBar(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
-        )
-
-        chatPanel(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(3f)
-        )
-    }
-}
-
-@Composable
-private fun sideBar(modifier: Modifier = Modifier) {
-    var selectedItem by remember { mutableStateOf("Financial") }
-
-    Surface(
-        color = Color(0xFF353755),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = modifier
-                .padding(vertical = 36.dp, horizontal = 16.dp),
-            verticalArrangement = Arrangement.Top
-        ) {
-            Text(
-                text = "Command Center",
-                color = Color.Gray,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "OPERATIONS",
-                color = Color.Gray,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val items = listOf(
-                "Chief Financial Officer",
-                "Chief Marketing Officer",
-                "Head of Engineering"
-            )
-
-            items.forEach { itemText ->
-                SocietasItem(
-                    text = itemText,
-                    isSelected = (selectedItem == itemText),
-                    onClick = {
-                        selectedItem = itemText
-                    }
-                )
-            }
-
-        }
-    }
-}
-
-@Composable
-private fun chatPanel(modifier: Modifier = Modifier) {
-    val sampleMessages = listOf(
-        SocietasChatMessageModel(
-            "What was our operating margin for Q2 2025?",
-            "User"
-        ),
-        SocietasChatMessageModel(
-            "Our operating margin for Q2 2025 was 18.7%. This is an increase from 16.2% in Q1 2025, primarily driven by reduced operational expenditure.",
-            "CFO"
-        ),
-        SocietasChatMessageModel(
-            "Show me the breakdown of that OpEx reduction.",
-            "User"
-        )
+fun SocietasHomeScreenSuccessState(
+    model: SocietasHomeScreenModel,
+) {
+    val designSystem = societasDesignSystem()
+    val spacing = designSystem.spacing
+    val colors = designSystem.colors
+    
+    var selectedAgent by remember { mutableStateOf(model.cBoard.firstOrNull()) }
+    
+    // Animation for the entire layout
+    val layoutAlpha by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 500),
+        label = "layout_alpha"
     )
 
-    Column(
-        modifier = modifier
-            .background(Color(0xFF353739))
-            .padding(16.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .alpha(layoutAlpha)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        chatPanelHeader()
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp) // Adds space between bubbles
-        ) {
-            items(sampleMessages) { message ->
-                SocietasChatMessage(message = message)
+        // Modern Sidebar
+        ModernSidebar(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f),
+            agents = model.cBoard,
+            enterprise = model.enterprise,
+            selectedAgent = selectedAgent,
+            onAgentSelected = { agent ->
+                selectedAgent = agent
             }
+        )
+        
+        // Divider
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(1.dp)
+                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
+        )
+
+        // Chat Area with Animation
+        AnimatedContent(
+            targetState = selectedAgent,
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(3f),
+            transitionSpec = {
+                slideInHorizontally(
+                    initialOffsetX = { it / 3 },
+                    animationSpec = tween(300)
+                ) + fadeIn(tween(300)) togetherWith 
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 3 },
+                    animationSpec = tween(300)
+                ) + fadeOut(tween(300))
+            },
+            label = "chat_panel_transition"
+        ) { agent ->
+            ChatPanel(
+                modifier = Modifier.fillMaxSize(),
+                model = model,
+                selectedAgent = agent
+            )
         }
-        SocietasMessageInput(modifier = Modifier.fillMaxWidth())
     }
 }
 
 @Composable
-private fun chatPanelHeader(modifier: Modifier = Modifier) {
-    Row(
+private fun ModernSidebar(
+    modifier: Modifier = Modifier,
+    agents: Array<SocietasHomeScreenModel.Agent>,
+    enterprise: String,
+    selectedAgent: SocietasHomeScreenModel.Agent?,
+    onAgentSelected: (SocietasHomeScreenModel.Agent) -> Unit
+) {
+    val designSystem = societasDesignSystem()
+    val spacing = designSystem.spacing
+    val colors = designSystem.colors
+    
+    // Animated background gradient
+    val gradientColors = listOf(
+        MaterialTheme.colorScheme.surface,
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+    )
+
+    SocietasCard(
+        variant = SocietasCardVariant.ELEVATED,
+        size = SocietasCardSize.LARGE,
         modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text("Header Area", color = Color.White)
-        Row() {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "User Account",
-                tint = Color.Gray
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(gradientColors),
+                shape = RoundedCornerShape(
+                    topEnd = spacing.borderRadiusLarge,
+                    bottomEnd = spacing.borderRadiusLarge
+                )
             )
-            Spacer(Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add",
-                tint = Color.Gray
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(spacing.xxl)
+        ) {
+            // Header Section
+            SidebarHeader(enterprise = enterprise)
+            
+            // Agents Section
+            AgentsSection(
+                agents = agents,
+                selectedAgent = selectedAgent,
+                onAgentSelected = onAgentSelected
+            )
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Footer Section
+            SidebarFooter()
+        }
+    }
+}
+
+@Composable
+private fun SidebarHeader(enterprise: String) {
+    val designSystem = societasDesignSystem()
+    val spacing = designSystem.spacing
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(spacing.sm)
+    ) {
+        SocietasAvatar(
+            size = SocietasAvatarSize.LARGE,
+            variant = SocietasAvatarVariant.INITIALS,
+            initials = enterprise.take(2),
+            backgroundColor = designSystem.colors.Primary,
+            contentColor = designSystem.colors.OnPrimary
+        )
+        
+        Text(
+            text = enterprise,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold
+        )
+        
+        SocietasChip(
+            text = "Enterprise",
+            variant = SocietasChipVariant.FILLED,
+            size = SocietasChipSize.SMALL,
+            selected = false,
+            leadingIcon = SocietasIcons.BUSINESS.filled
+        )
+    }
+}
+
+@Composable
+private fun AgentsSection(
+    agents: Array<SocietasHomeScreenModel.Agent>,
+    selectedAgent: SocietasHomeScreenModel.Agent?,
+    onAgentSelected: (SocietasHomeScreenModel.Agent) -> Unit
+) {
+    val designSystem = societasDesignSystem()
+    val spacing = designSystem.spacing
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(spacing.md)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "C-SUITE AGENTS",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+            
+            SocietasBadge(
+                text = agents.size.toString(),
+                variant = SocietasBadgeVariant.FILLED,
+                color = SocietasBadgeColor.PRIMARY
+            )
+        }
+        
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(spacing.xs)
+        ) {
+            items(agents.toList()) { agent ->
+                AgentListItem(
+                    agent = agent,
+                    isSelected = selectedAgent?.name == agent.name,
+                    onClick = { onAgentSelected(agent) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AgentListItem(
+    agent: SocietasHomeScreenModel.Agent,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val designSystem = societasDesignSystem()
+    
+    SocietasIconListItem(
+        headlineText = agent.name,
+        supportingText = "AI Assistant",
+        variant = SocietasListItemVariant.TWO_LINE,
+        leadingIcon = when (agent.name.lowercase()) {
+            "cfo" -> SocietasIcons.WORK.filled
+            "ceo" -> SocietasIcons.BUSINESS.filled
+            "cto" -> SocietasIcons.BUSINESS.filled
+            else -> SocietasIcons.PERSON.filled
+        },
+        trailingIcon = if (isSelected) SocietasIcons.CHECK.filled else null,
+        selected = isSelected,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun SidebarFooter() {
+    val designSystem = societasDesignSystem()
+    val spacing = designSystem.spacing
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(spacing.md)
+    ) {
+        SocietasButton(
+            onClick = { /* Settings action */ },
+            text = "Settings",
+            variant = SocietasButtonVariant.GHOST,
+            size = SocietasButtonSize.SMALL,
+            fullWidth = true
+        )
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SocietasAvatar(
+                size = SocietasAvatarSize.SMALL,
+                variant = SocietasAvatarVariant.INITIALS,
+                initials = "US",
+                backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Text(
+                text = "User Account",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

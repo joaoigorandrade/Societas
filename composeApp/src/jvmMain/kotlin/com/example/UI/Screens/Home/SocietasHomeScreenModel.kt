@@ -13,7 +13,8 @@ data class SocietasHomeScreenModel(
     @Serializable
     data class Agent(
         val name: String,
-        val department: String
+        val department: String,
+        val id: String
     )
 
     override fun equals(other: Any?): Boolean {
