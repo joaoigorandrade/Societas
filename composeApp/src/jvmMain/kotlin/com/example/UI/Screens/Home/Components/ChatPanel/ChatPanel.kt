@@ -12,22 +12,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.UI.Components.ChatMessage.SocietasChatMessage
 import com.example.UI.Components.Input.SocietasMessageInput
+import com.example.UI.DesignSystem.societasDesignSystem
+import com.example.UI.DesignSystem.SocietasIcons
 import com.example.UI.Screens.Home.SocietasHomeScreenModel
 import org.koin.compose.koinInject
 
@@ -37,7 +36,10 @@ fun ChatPanel(
     model: SocietasHomeScreenModel,
     selectedAgent: SocietasHomeScreenModel.Agent?
 ) {
-
+    val designSystem = societasDesignSystem()
+    val colors = designSystem.colors
+    val spacing = designSystem.spacing
+    
     val viewModel: ChatPanelViewModel = koinInject()
     val messageState by viewModel.messageState.collectAsState()
     val messages by viewModel.messages.collectAsState()
@@ -54,19 +56,22 @@ fun ChatPanel(
 
     Column(
         modifier = modifier
-            .background(Color(0xFF353739))
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(spacing.screenPadding)
     ) {
         chatPanelHeader(model.userName)
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (val state = messageState) {
                 is ChatPanelViewState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
                 is ChatPanelViewState.Success -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(spacing.itemSpacing)
                     ) {
                         items(messages) { message ->
                             SocietasChatMessage(message = message)
@@ -76,7 +81,8 @@ fun ChatPanel(
                 is ChatPanelViewState.Error -> {
                     Text(
                         text = state.message,
-                        color = Color.Red,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.Error,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -100,25 +106,32 @@ private fun chatPanelHeader(
     userName: String,
     modifier: Modifier = Modifier
 ) {
+    val designSystem = societasDesignSystem()
+    val spacing = designSystem.spacing
+    
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(spacing.screenPadding),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(userName, color = Color.White)
-        Row() {
+        Text(
+            text = userName,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Row {
             Icon(
-                imageVector = Icons.Default.Person,
+                imageVector = SocietasIcons.PERSON.filled,
                 contentDescription = "User Account",
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(spacing.sm))
             Icon(
-                imageVector = Icons.Default.Add,
+                imageVector = SocietasIcons.ADD.filled,
                 contentDescription = "Add",
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

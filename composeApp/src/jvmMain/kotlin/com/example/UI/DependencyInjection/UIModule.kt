@@ -1,6 +1,6 @@
 package com.example.societas.di
 
-import SocietasHomeScreenViewModel
+import com.example.UI.Screens.Home.SocietasHomeScreenViewModel
 import com.example.UI.Screens.Home.Components.ChatPanel.ChatPanelViewModel
 import org.koin.dsl.module
 

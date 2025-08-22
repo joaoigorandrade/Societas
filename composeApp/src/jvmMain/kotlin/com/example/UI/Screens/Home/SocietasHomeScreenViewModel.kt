@@ -1,3 +1,5 @@
+package com.example.UI.Screens.Home
+
 import com.example.Domain.UseCase.Home.SocietasHomeUseCase
 import com.example.UI.Screens.SocietasViewState
 import kotlinx.coroutines.CoroutineScope
