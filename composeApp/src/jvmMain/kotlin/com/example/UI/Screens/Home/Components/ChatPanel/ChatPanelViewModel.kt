@@ -3,7 +3,7 @@ package com.example.UI.Screens.Home.Components.ChatPanel
 import com.example.Domain.UseCase.Message.GetMessagesUseCase
 import com.example.Domain.UseCase.Message.SendMessageUseCase
 import com.example.Networking.Core.NetworkResult
-import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
+import com.example.UI.Components.ChatMessage.SocietasChatModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +16,10 @@ class ChatPanelViewModel(
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
-    private val _messages = MutableStateFlow<List<SocietasChatMessageModel>>(emptyList())
+    private val _chatId = MutableStateFlow("")
+    val chatId = _chatId.asStateFlow()
+
+    private val _messages = MutableStateFlow<List<SocietasChatModel.Message>>(emptyList())
     val messages = _messages.asStateFlow()
 
     private val _messageState = MutableStateFlow<ChatPanelViewState>(ChatPanelViewState.Idle)
@@ -27,7 +30,8 @@ class ChatPanelViewModel(
             _messageState.value = ChatPanelViewState.Loading
             when (val result = getMessagesUseCase.execute(userId, agentId)) {
                 is NetworkResult.Success -> {
-                    _messages.value = result.data
+                    _chatId.value = result.data.chatId
+                    _messages.value = result.data.messages
                     _messageState.value = ChatPanelViewState.Success
                 }
                 is NetworkResult.Error -> {
@@ -38,11 +42,25 @@ class ChatPanelViewModel(
         }
     }
 
-    fun sendMessage(agentId: String, message: String) {
+    fun sendMessage(
+        userId: String,
+        chatId: String,
+        message: String
+    ) {
         scope.launch {
-            val result = sendMessageUseCase.execute(agentId, message)
-            println("Message send result: $result")
-            // Here you would typically add the new message to the _messages StateFlow
+            val newMessage = SocietasChatModel.Message(text = message, author = userId)
+            _messages.value = _messages.value + newMessage
+
+            when (val result = sendMessageUseCase.execute(userId, chatId, message)) {
+                is NetworkResult.Success -> {
+                    // Message sent successfully.
+                }
+                is NetworkResult.Error -> {
+                    _messages.value = _messages.value.filterNot { it == newMessage }
+                    _messageState.value = ChatPanelViewState.Error("Failed to send message: ${result.message}")
+                }
+                else -> { /* No-op */ }
+            }
         }
     }
 }

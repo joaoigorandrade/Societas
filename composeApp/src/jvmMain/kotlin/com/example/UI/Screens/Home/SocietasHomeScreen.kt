@@ -15,14 +15,12 @@ import org.koin.compose.koinInject
 @Composable
 fun SocietasHomeScreen(modifier: Modifier = Modifier) {
     val viewModel: SocietasHomeScreenViewModel = koinInject()
-    val chatPanelViewModel: ChatPanelViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
 
     when(val state = uiState) {
         is SocietasViewState.Success -> {
             SocietasHomeScreenSuccessState(
-                model = state.data as SocietasHomeScreenModel,
-                chatPanelViewModel = chatPanelViewModel
+                model = state.data as SocietasHomeScreenModel
             )
         }
         is SocietasViewState.Loading -> {

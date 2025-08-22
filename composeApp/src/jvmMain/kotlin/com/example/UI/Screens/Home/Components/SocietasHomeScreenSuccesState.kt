@@ -17,18 +17,8 @@ import com.example.UI.Screens.Home.SocietasHomeScreenModel
 @Composable
 fun SocietasHomeScreenSuccessState(
     model: SocietasHomeScreenModel,
-    chatPanelViewModel: ChatPanelViewModel
 ) {
     var selectedAgent by remember { mutableStateOf(model.cBoard.firstOrNull()) }
-    val messages by chatPanelViewModel.messages.collectAsState()
-    val messageViewState by chatPanelViewModel.messageState.collectAsState()
-
-    LaunchedEffect(selectedAgent) {
-        selectedAgent?.let {
-            // Fake user ID
-            chatPanelViewModel.loadMessages("6qDU3re3ejbpIdman0WL", it.id)
-        }
-    }
 
     Row(modifier = Modifier.fillMaxSize()) {
         sideBar(
@@ -48,13 +38,7 @@ fun SocietasHomeScreenSuccessState(
                 .fillMaxHeight()
                 .weight(3f),
             model = model,
-            messages = messages,
-            messageViewState = messageViewState,
-            onSendMessage = { message ->
-                selectedAgent?.let { agent ->
-                    chatPanelViewModel.sendMessage(agent.name, message)
-                }
-            }
+            selectedAgent = selectedAgent
         )
     }
 }

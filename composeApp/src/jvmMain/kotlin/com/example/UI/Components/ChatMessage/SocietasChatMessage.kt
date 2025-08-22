@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SocietasChatMessage(
-    message: SocietasChatMessageModel,
+    message: SocietasChatModel.Message,
     modifier: Modifier = Modifier,
 ) {
 

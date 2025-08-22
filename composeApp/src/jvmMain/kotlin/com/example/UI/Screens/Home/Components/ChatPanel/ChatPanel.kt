@@ -19,23 +19,39 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.UI.Components.ChatMessage.SocietasChatMessage
-import com.example.UI.Components.ChatMessage.SocietasChatMessageModel
 import com.example.UI.Components.Input.SocietasMessageInput
 import com.example.UI.Screens.Home.SocietasHomeScreenModel
+import org.koin.compose.koinInject
 
 @Composable
 fun ChatPanel(
     modifier: Modifier = Modifier,
     model: SocietasHomeScreenModel,
-    messages: List<SocietasChatMessageModel>,
-    messageViewState: ChatPanelViewState,
-    onSendMessage: (String) -> Unit
+    selectedAgent: SocietasHomeScreenModel.Agent?
 ) {
+
+    val viewModel: ChatPanelViewModel = koinInject()
+    val messageState by viewModel.messageState.collectAsState()
+    val messages by viewModel.messages.collectAsState()
+    val chatId by viewModel.chatId.collectAsState()
+
+    LaunchedEffect(selectedAgent) {
+        selectedAgent?.let {
+            viewModel.loadMessages(
+                "6qDU3re3ejbpIdman0WL",
+                it.id
+            )
+        }
+    }
+
     Column(
         modifier = modifier
             .background(Color(0xFF353739))
@@ -43,7 +59,7 @@ fun ChatPanel(
     ) {
         chatPanelHeader(model.userName)
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (messageViewState) {
+            when (val state = messageState) {
                 is ChatPanelViewState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
@@ -59,7 +75,7 @@ fun ChatPanel(
                 }
                 is ChatPanelViewState.Error -> {
                     Text(
-                        text = messageViewState.message,
+                        text = state.message,
                         color = Color.Red,
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -69,7 +85,12 @@ fun ChatPanel(
         }
         SocietasMessageInput(
             modifier = Modifier.fillMaxWidth(),
-            onSendMessage = onSendMessage
+            onSendMessage = {
+                viewModel.sendMessage(
+                    "6qDU3re3ejbpIdman0WL",
+                    chatId = chatId,
+                    message = it)
+            }
         )
     }
 }

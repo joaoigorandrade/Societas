@@ -9,10 +9,14 @@ import com.example.Networking.Interfaces.SocietasRequest
 
 class SendMessageUseCase(private val repository: ApiRepositoryInterface) {
 
-    suspend fun execute(agentId: String, message: String): NetworkResult<SendMessageResponse> {
+    suspend fun execute(
+        userId: String,
+        chatId: String,
+        message: String
+    ): NetworkResult<SendMessageResponse> {
         val requestBody = SendMessageBody(
-            userId = "user-12345",
-            agentId = agentId,
+            userId = userId,
+            chatId = chatId,
             message = message
         )
         val request = SocietasRequest.SendMessage(requestBody)
