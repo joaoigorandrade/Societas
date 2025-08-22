@@ -1,3 +1,5 @@
+package com.example.UI.Screens.Home
+
 import com.example.Domain.UseCase.Home.SocietasHomeUseCase
 import com.example.UI.Screens.SocietasViewState
 import kotlinx.coroutines.CoroutineScope
@@ -7,7 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-class SocietasHomeScreenViewModel(private val useCase: SocietasHomeUseCase) {
+class SocietasHomeScreenViewModel(
+    private val homeUseCase: SocietasHomeUseCase,
+) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
     private val _uiState = MutableStateFlow<SocietasViewState>(SocietasViewState.Loading)
@@ -19,7 +23,7 @@ class SocietasHomeScreenViewModel(private val useCase: SocietasHomeUseCase) {
 
     private fun loadData() {
         scope.launch {
-            _uiState.value = useCase.execute()
+            _uiState.value = homeUseCase.execute()
         }
     }
 }
