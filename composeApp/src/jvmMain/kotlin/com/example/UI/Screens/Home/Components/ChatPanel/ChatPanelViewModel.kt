@@ -27,18 +27,22 @@ class ChatPanelViewModel(
 
     fun loadMessages(userId: String, agentId: String) {
         scope.launch {
-            _messageState.value = ChatPanelViewState.Loading
-            when (val result = getMessagesFromFirestoreUseCase.execute(userId, agentId)) {
-                is NetworkResult.Success -> {
-                    _chatId.value = result.data.chatId
-                    _messages.value = result.data.messages
-                    _messageState.value = ChatPanelViewState.Success
+            getMessagesFromFirestoreUseCase.execute(userId, agentId)
+                .collect { result ->
+                    when (result) {
+                        is NetworkResult.Success -> {
+                            _chatId.value = result.data.chatId
+                            _messages.value = result.data.messages
+                            _messageState.value = ChatPanelViewState.Success
+                        }
+                        is NetworkResult.Error -> {
+                            _messageState.value = ChatPanelViewState.Error(result.message)
+                        }
+                        is NetworkResult.Loading -> {
+                            _messageState.value = ChatPanelViewState.Loading
+                        }
+                    }
                 }
-                is NetworkResult.Error -> {
-                    _messageState.value = ChatPanelViewState.Error(result.message)
-                }
-                else -> { /* No-op for loading state */ }
-            }
         }
     }
 
