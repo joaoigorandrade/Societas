@@ -1,5 +1,6 @@
-package com.example.Domain.Repository
+package com.example.Domain.Repository.Rest
 
+import com.example.Domain.Repository.Rest.ApiRepositoryInterface
 import com.example.Networking.Interfaces.Client.Http.NetworkingOperationInterface
 import com.example.Networking.Interfaces.RequestInterface
 import io.ktor.client.statement.HttpResponse

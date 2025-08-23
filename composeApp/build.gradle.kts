@@ -33,6 +33,7 @@ kotlin {
             implementation(projects.shared)
             implementation(compose.animation)
             implementation(compose.materialIconsExtended)
+            implementation("com.google.firebase:firebase-admin:9.2.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

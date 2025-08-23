@@ -1,4 +1,4 @@
-package com.example.Domain.Repository
+package com.example.Domain.Repository.Rest
 
 import com.example.Networking.Interfaces.RequestInterface
 import io.ktor.client.statement.HttpResponse

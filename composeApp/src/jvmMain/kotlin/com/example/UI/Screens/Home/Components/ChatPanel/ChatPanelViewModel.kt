@@ -1,6 +1,6 @@
 package com.example.UI.Screens.Home.Components.ChatPanel
 
-import com.example.Domain.UseCase.Message.GetMessagesUseCase
+import com.example.Domain.UseCase.Message.GetMessagesFromFirestoreUseCase
 import com.example.Domain.UseCase.Message.SendMessageUseCase
 import com.example.Networking.Core.NetworkResult
 import com.example.UI.Components.ChatMessage.SocietasChatModel
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class ChatPanelViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
-    private val getMessagesUseCase: GetMessagesUseCase
+    private val getMessagesFromFirestoreUseCase: GetMessagesFromFirestoreUseCase
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
@@ -28,7 +28,7 @@ class ChatPanelViewModel(
     fun loadMessages(userId: String, agentId: String) {
         scope.launch {
             _messageState.value = ChatPanelViewState.Loading
-            when (val result = getMessagesUseCase.execute(userId, agentId)) {
+            when (val result = getMessagesFromFirestoreUseCase.execute(userId, agentId)) {
                 is NetworkResult.Success -> {
                     _chatId.value = result.data.chatId
                     _messages.value = result.data.messages
