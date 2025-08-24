@@ -12,11 +12,13 @@ class SendMessageUseCase(private val repository: ApiRepositoryInterface) {
     suspend fun execute(
         userId: String,
         chatId: String,
+        agentId: String,
         message: String
     ): NetworkResult<SendMessageResponse> {
         val requestBody = SendMessageBody(
             userId = userId,
             chatId = chatId,
+            agentId = agentId,
             message = message
         )
         val request = SocietasRequest.SendMessage(requestBody)

@@ -49,13 +49,14 @@ class ChatPanelViewModel(
     fun sendMessage(
         userId: String,
         chatId: String,
+        agentId: String,
         message: String
     ) {
         scope.launch {
             val newMessage = SocietasChatModel.Message(text = message, author = userId)
             _messages.value = _messages.value + newMessage
 
-            when (val result = sendMessageUseCase.execute(userId, chatId, message)) {
+            when (val result = sendMessageUseCase.execute(userId, chatId, agentId, message)) {
                 is NetworkResult.Success -> {
                     // Message sent successfully.
                 }

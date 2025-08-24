@@ -95,6 +95,7 @@ fun ChatPanel(
                 viewModel.sendMessage(
                     "6qDU3re3ejbpIdman0WL",
                     chatId = chatId,
+                    agentId = selectedAgent?.id ?: "",
                     message = it)
             }
         )
