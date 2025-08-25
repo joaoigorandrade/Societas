@@ -25,6 +25,9 @@ class ChatPanelViewModel(
     private val _messageState = MutableStateFlow<ChatPanelViewState>(ChatPanelViewState.Idle)
     val messageState = _messageState.asStateFlow()
 
+    private val _isSendingMessage = MutableStateFlow(false)
+    val isSendingMessage = _isSendingMessage.asStateFlow()
+
     fun loadMessages(userId: String, agentId: String) {
         scope.launch {
             getMessagesFromFirestoreUseCase.execute(userId, agentId)
@@ -53,18 +56,21 @@ class ChatPanelViewModel(
         message: String
     ) {
         scope.launch {
+            _isSendingMessage.value = true
             val newMessage = SocietasChatModel.Message(text = message, author = userId)
             _messages.value = _messages.value + newMessage
 
-            when (val result = sendMessageUseCase.execute(userId, chatId, agentId, message)) {
-                is NetworkResult.Success -> {
-                    // Message sent successfully.
+            try {
+                when (val result = sendMessageUseCase.execute(userId, chatId, agentId, message)) {
+                    is NetworkResult.Success -> { }
+                    is NetworkResult.Error -> {
+                        _messages.value = _messages.value.filterNot { it == newMessage }
+                        _messageState.value = ChatPanelViewState.Error("Failed to send message: ${result.message}")
+                    }
+                    else -> { }
                 }
-                is NetworkResult.Error -> {
-                    _messages.value = _messages.value.filterNot { it == newMessage }
-                    _messageState.value = ChatPanelViewState.Error("Failed to send message: ${result.message}")
-                }
-                else -> { /* No-op */ }
+            } finally {
+                _isSendingMessage.value = false
             }
         }
     }

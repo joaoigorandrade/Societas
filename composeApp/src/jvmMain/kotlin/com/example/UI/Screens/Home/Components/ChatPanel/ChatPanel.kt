@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,11 +40,13 @@ fun ChatPanel(
     val designSystem = societasDesignSystem()
     val colors = designSystem.colors
     val spacing = designSystem.spacing
-    
+
     val viewModel: ChatPanelViewModel = koinInject()
     val messageState by viewModel.messageState.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val chatId by viewModel.chatId.collectAsState()
+    val isSendingMessage by viewModel.isSendingMessage.collectAsState()
+    val listState = rememberLazyListState()
 
     LaunchedEffect(selectedAgent) {
         selectedAgent?.let {
@@ -51,6 +54,12 @@ fun ChatPanel(
                 "6qDU3re3ejbpIdman0WL",
                 it.id
             )
+        }
+    }
+
+    LaunchedEffect(messages) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
         }
     }
 
@@ -70,6 +79,7 @@ fun ChatPanel(
                 }
                 is ChatPanelViewState.Success -> {
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(spacing.itemSpacing)
                     ) {
@@ -96,8 +106,10 @@ fun ChatPanel(
                     "6qDU3re3ejbpIdman0WL",
                     chatId = chatId,
                     agentId = selectedAgent?.id ?: "",
-                    message = it)
-            }
+                    message = it
+                )
+            },
+            isSending = isSendingMessage
         )
     }
 }
@@ -109,7 +121,7 @@ private fun chatPanelHeader(
 ) {
     val designSystem = societasDesignSystem()
     val spacing = designSystem.spacing
-    
+
     Row(
         modifier = modifier
             .fillMaxWidth()
