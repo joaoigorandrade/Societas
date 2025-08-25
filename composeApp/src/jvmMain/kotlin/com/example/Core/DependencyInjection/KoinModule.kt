@@ -1,5 +1,7 @@
 package com.example.societas.DependencyInjection
 
+import com.example.Domain.DependencyInjection.authModule
+import com.example.Navigation.di.navigationModule
 import com.example.Networking.DependencyInjection.networkModule
 import com.example.societas.di.domainModule
 import com.example.societas.di.uiModule
@@ -11,6 +13,8 @@ val appModule = module {
         networkModule,
         uiModule,
         domainModule,
-        firestoreModule
+        firestoreModule,
+        authModule,
+        navigationModule
     )
 }

@@ -1,5 +1,6 @@
 package com.example.Networking.Interfaces
 
+import com.example.Domain.Models.Auth.AuthRequest
 import com.example.Networking.RequestParameters
 import io.ktor.http.HttpMethod
 
@@ -35,6 +36,28 @@ sealed class SocietasRequest : RequestInterface {
             get() = "/api/users/$userId/chats/with/$agentId"
         override val parameters: RequestParameters
             get() = RequestParameters.None
+        override val headers: Map<String, String>?
+            get() = null
+    }
+
+    data class SignIn(val body: AuthRequest) : SocietasRequest() {
+        override val method: HttpMethod
+            get() = HttpMethod.Post
+        override val path: String
+            get() = "/auth/signin"
+        override val parameters: RequestParameters
+            get() = RequestParameters.Body(body)
+        override val headers: Map<String, String>?
+            get() = null
+    }
+
+    data class SignUp(val body: AuthRequest) : SocietasRequest() {
+        override val method: HttpMethod
+            get() = HttpMethod.Post
+        override val path: String
+            get() = "/auth/signup"
+        override val parameters: RequestParameters
+            get() = RequestParameters.Body(body)
         override val headers: Map<String, String>?
             get() = null
     }
