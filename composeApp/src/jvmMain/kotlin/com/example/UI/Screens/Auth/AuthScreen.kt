@@ -44,7 +44,7 @@ fun AuthScreen(modifier: Modifier = Modifier) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = viewModel.authMode.ordinal == index,
-                            onClick = { viewModel.setAuthType(if (index == 0) AuthMode.SIGN_IN else AuthMode.SIGN_UP) },
+                            onClick = { viewModel.setAuth(if (index == 0) AuthMode.SIGN_IN else AuthMode.SIGN_UP) },
                             text = { Text(title) }
                         )
                     }
@@ -52,32 +52,38 @@ fun AuthScreen(modifier: Modifier = Modifier) {
 
                 SocietasTextField(
                     value = viewModel.email,
-                    onValueChange = { viewModel.email = it },
+                    onValueChange = { viewModel.onEmailChange(it) },
                     label = "Email",
                     keyboardType = KeyboardType.Email,
                     size = SocietasTextFieldSize.MEDIUM,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = viewModel.emailError != null,
+                    errorMessage = viewModel.emailError
                 )
 
                 SocietasTextField(
                     value = viewModel.password,
-                    onValueChange = { viewModel.password = it },
+                    onValueChange = { viewModel.onPasswordChange(it) },
                     label = "Password",
                     keyboardType = KeyboardType.Password,
                     visualTransformation = PasswordVisualTransformation(),
                     size = SocietasTextFieldSize.MEDIUM,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = viewModel.passwordError != null,
+                    errorMessage = viewModel.passwordError
                 )
 
                 if (viewModel.authMode == AuthMode.SIGN_UP) {
                     SocietasTextField(
                         value = viewModel.confirmPassword,
-                        onValueChange = { viewModel.confirmPassword = it },
+                        onValueChange = { viewModel.onConfirmPasswordChange(it) },
                         label = "Confirm Password",
                         keyboardType = KeyboardType.Password,
                         visualTransformation = PasswordVisualTransformation(),
                         size = SocietasTextFieldSize.MEDIUM,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = viewModel.confirmPasswordError != null,
+                        errorMessage = viewModel.confirmPasswordError
                     )
                 }
 

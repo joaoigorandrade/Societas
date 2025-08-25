@@ -33,15 +33,65 @@ class AuthViewModel(
     var confirmPassword by mutableStateOf("")
     var authMode by mutableStateOf(AuthMode.SIGN_IN)
 
+    var emailError by mutableStateOf<String?>(null)
+    var passwordError by mutableStateOf<String?>(null)
+    var confirmPasswordError by mutableStateOf<String?>(null)
+
+    private var hasSubmittedOnce by mutableStateOf(false)
+
     private val _authState = MutableStateFlow<AuthViewState>(AuthViewState.Idle)
     val authState = _authState.asStateFlow()
 
-    fun setAuthType(mode: AuthMode) {
+    fun onEmailChange(newEmail: String) {
+        email = newEmail
+        if (hasSubmittedOnce) validateEmail()
+    }
+
+    fun onPasswordChange(newPassword: String) {
+        password = newPassword
+        if (hasSubmittedOnce) validatePassword()
+    }
+
+    fun onConfirmPasswordChange(newConfirmPassword: String) {
+        confirmPassword = newConfirmPassword
+        if (hasSubmittedOnce) validateConfirmPassword()
+    }
+
+    fun setAuth(mode: AuthMode) {
         authMode = mode
         _authState.value = AuthViewState.Idle
+        hasSubmittedOnce = false
+        emailError = null
+        passwordError = null
+        confirmPasswordError = null
+    }
+
+    private fun validateEmail(): Boolean {
+        emailError = if (!email.contains("@") || email.length < 5) "Invalid email address" else null
+        return emailError == null
+    }
+
+    private fun validatePassword(): Boolean {
+        passwordError = if (password.length < 6) "Password must be at least 6 characters" else null
+        return passwordError == null
+    }
+
+    private fun validateConfirmPassword(): Boolean {
+        confirmPasswordError = if (password != confirmPassword) "Passwords do not match" else null
+        return confirmPasswordError == null
+    }
+
+    private fun validate(): Boolean {
+        val isEmailValid = validateEmail()
+        val isPasswordValid = validatePassword()
+        val isConfirmPasswordValid = if (authMode == AuthMode.SIGN_UP) validateConfirmPassword() else true
+        return isEmailValid && isPasswordValid && isConfirmPasswordValid
     }
 
     fun signIn() {
+        hasSubmittedOnce = true
+        if (!validate()) return
+
         scope.launch {
             _authState.value = AuthViewState.Loading
             val result = signInUseCase.execute(AuthRequest(email, password))
@@ -50,10 +100,8 @@ class AuthViewModel(
     }
 
     fun signUp() {
-        if (password != confirmPassword) {
-            _authState.value = AuthViewState.Error("Passwords do not match")
-            return
-        }
+        hasSubmittedOnce = true
+        if (!validate()) return
 
         scope.launch {
             _authState.value = AuthViewState.Loading
