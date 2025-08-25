@@ -47,12 +47,12 @@ fun SocietasChatMessage(
     var isVisible by remember { mutableStateOf(false) }
     val alpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 30),
         label = "message_fade_in"
     )
     
     LaunchedEffect(Unit) {
-        delay(100) // Small delay for staggered animation
+        delay(10) // Small delay for staggered animation
         isVisible = true
     }
     
@@ -71,7 +71,6 @@ fun SocietasChatMessage(
             horizontalArrangement = arrangement,
             verticalAlignment = Alignment.Bottom
         ) {
-            // Avatar for AI messages (left side)
             if (!isUserMessage) {
                 SocietasAvatar(
                     size = SocietasAvatarSize.SMALL,
@@ -83,7 +82,6 @@ fun SocietasChatMessage(
                 )
             }
             
-            // Message bubble
             SocietasCard(
                 variant = if (isUserMessage) SocietasCardVariant.FILLED else SocietasCardVariant.ELEVATED,
                 size = SocietasCardSize.SMALL,
@@ -114,7 +112,6 @@ fun SocietasChatMessage(
                 }
             }
             
-            // Avatar for user messages (right side)
             if (isUserMessage) {
                 SocietasAvatar(
                     size = SocietasAvatarSize.SMALL,

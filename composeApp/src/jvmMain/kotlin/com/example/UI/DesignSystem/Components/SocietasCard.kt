@@ -62,7 +62,7 @@ fun SocietasCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
         SocietasCardVariant.FILLED -> CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = colors.Primary
         )
     }
     
@@ -109,7 +109,7 @@ fun SocietasCard(
             Box(
                 modifier = modifier
                     .clip(cardShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(colors.Primary)
                     .padding(cardPadding)
             ) {
                 content()

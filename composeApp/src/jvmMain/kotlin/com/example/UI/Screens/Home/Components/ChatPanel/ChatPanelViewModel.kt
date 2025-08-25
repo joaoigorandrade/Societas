@@ -1,6 +1,6 @@
 package com.example.UI.Screens.Home.Components.ChatPanel
 
-import com.example.Domain.UseCase.Message.GetMessagesUseCase
+import com.example.Domain.UseCase.Message.GetMessagesFromFirestoreUseCase
 import com.example.Domain.UseCase.Message.SendMessageUseCase
 import com.example.Networking.Core.NetworkResult
 import com.example.UI.Components.ChatMessage.SocietasChatModel
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class ChatPanelViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
-    private val getMessagesUseCase: GetMessagesUseCase
+    private val getMessagesFromFirestoreUseCase: GetMessagesFromFirestoreUseCase
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
@@ -25,41 +25,52 @@ class ChatPanelViewModel(
     private val _messageState = MutableStateFlow<ChatPanelViewState>(ChatPanelViewState.Idle)
     val messageState = _messageState.asStateFlow()
 
+    private val _isSendingMessage = MutableStateFlow(false)
+    val isSendingMessage = _isSendingMessage.asStateFlow()
+
     fun loadMessages(userId: String, agentId: String) {
         scope.launch {
-            _messageState.value = ChatPanelViewState.Loading
-            when (val result = getMessagesUseCase.execute(userId, agentId)) {
-                is NetworkResult.Success -> {
-                    _chatId.value = result.data.chatId
-                    _messages.value = result.data.messages
-                    _messageState.value = ChatPanelViewState.Success
+            getMessagesFromFirestoreUseCase.execute(userId, agentId)
+                .collect { result ->
+                    when (result) {
+                        is NetworkResult.Success -> {
+                            _chatId.value = result.data.chatId
+                            _messages.value = result.data.messages
+                            _messageState.value = ChatPanelViewState.Success
+                        }
+                        is NetworkResult.Error -> {
+                            _messageState.value = ChatPanelViewState.Error(result.message)
+                        }
+                        is NetworkResult.Loading -> {
+                            _messageState.value = ChatPanelViewState.Loading
+                        }
+                    }
                 }
-                is NetworkResult.Error -> {
-                    _messageState.value = ChatPanelViewState.Error(result.message)
-                }
-                else -> { /* No-op for loading state */ }
-            }
         }
     }
 
     fun sendMessage(
         userId: String,
         chatId: String,
+        agentId: String,
         message: String
     ) {
         scope.launch {
+            _isSendingMessage.value = true
             val newMessage = SocietasChatModel.Message(text = message, author = userId)
             _messages.value = _messages.value + newMessage
 
-            when (val result = sendMessageUseCase.execute(userId, chatId, message)) {
-                is NetworkResult.Success -> {
-                    // Message sent successfully.
+            try {
+                when (val result = sendMessageUseCase.execute(userId, chatId, agentId, message)) {
+                    is NetworkResult.Success -> { }
+                    is NetworkResult.Error -> {
+                        _messages.value = _messages.value.filterNot { it == newMessage }
+                        _messageState.value = ChatPanelViewState.Error("Failed to send message: ${result.message}")
+                    }
+                    else -> { }
                 }
-                is NetworkResult.Error -> {
-                    _messages.value = _messages.value.filterNot { it == newMessage }
-                    _messageState.value = ChatPanelViewState.Error("Failed to send message: ${result.message}")
-                }
-                else -> { /* No-op */ }
+            } finally {
+                _isSendingMessage.value = false
             }
         }
     }
