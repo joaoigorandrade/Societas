@@ -1,5 +1,6 @@
 package com.example.Domain.Models.Auth
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -23,12 +24,20 @@ data class UserData(
     val email: String,
     val emailVerified: Boolean,
     val displayName: String? = null,
-    val createdAt: String? = null, 
-    val lastLoginAt: String? = null
+    val createdAt: FirestoreTimestamp? = null,
+    val lastLoginAt: FirestoreTimestamp? = null
 )
 
 @Serializable
 data class AuthErrorPayload(
     val email: String?,
     val password: String?
+)
+
+@Serializable
+data class FirestoreTimestamp(
+    @SerialName("_seconds")
+    val seconds: Long = 0,
+    @SerialName("_nanos")
+    val nanoseconds: Long = 0
 )
