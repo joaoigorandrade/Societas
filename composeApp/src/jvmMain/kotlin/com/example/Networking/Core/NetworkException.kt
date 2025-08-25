@@ -7,7 +7,7 @@ sealed class NetworkException(override val message: String) : Exception(message)
 
     data object NetworkUnavailable : NetworkException("Network is unavailable")
 
-    data class HttpError(val code: Int, override val message: String) : NetworkException(message)
+    data class HttpError(val code: Int, override val message: String, val errorBody: String? = null) : NetworkException(message)
     data class SerializationError(override val message: String) : NetworkException(message)
     data class TimeoutError(override val message: String) : NetworkException(message)
     data class UnknownError(override val message: String) : NetworkException(message)

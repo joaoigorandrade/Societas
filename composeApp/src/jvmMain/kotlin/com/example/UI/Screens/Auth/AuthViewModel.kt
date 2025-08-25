@@ -3,18 +3,20 @@ package com.example.UI.Screens.Auth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.Domain.Models.Auth.AuthApiResponse
 import com.example.Domain.Models.Auth.AuthRequest
-import com.example.Domain.Models.Auth.AuthResponse
 import com.example.Domain.UseCase.Auth.SignInUseCase
 import com.example.Domain.UseCase.Auth.SignUpUseCase
 import com.example.Navigation.api.Navigator
 import com.example.Navigation.api.Route
+import com.example.Networking.Core.NetworkException
 import com.example.Networking.Core.NetworkResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 enum class AuthMode {
     SIGN_IN,
@@ -110,14 +112,33 @@ class AuthViewModel(
         }
     }
 
-    private fun handleAuthResult(result: NetworkResult<AuthResponse>) {
+    private fun handleAuthResult(result: NetworkResult<AuthApiResponse>) {
         when (result) {
             is NetworkResult.Success -> {
-                _authState.value = AuthViewState.Success
-                navigator.replace(Route("home"))
+                val apiResponse = result.data
+                if (apiResponse.success && apiResponse.data != null) {
+                    _authState.value = AuthViewState.Success
+                    navigator.replace(Route("home"))
+                } else {
+                    emailError = apiResponse.error?.email
+                    passwordError = apiResponse.error?.password
+                    _authState.value = AuthViewState.Error(apiResponse.message ?: "An unknown error occurred")
+                }
             }
             is NetworkResult.Error -> {
-                _authState.value = AuthViewState.Error(result.message)
+                val exception = result.exception
+                if (exception is NetworkException.HttpError && exception.errorBody != null) {
+                    try {
+                        val errorResponse = Json.decodeFromString<AuthApiResponse>(exception.errorBody)
+                        emailError = errorResponse.error?.email
+                        passwordError = errorResponse.error?.password
+                        _authState.value = AuthViewState.Error(errorResponse.message ?: result.message)
+                    } catch (e: Exception) {
+                        _authState.value = AuthViewState.Error(result.message)
+                    }
+                } else {
+                    _authState.value = AuthViewState.Error(result.message)
+                }
             }
             is NetworkResult.Loading -> {
                 _authState.value = AuthViewState.Loading

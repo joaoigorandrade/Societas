@@ -44,7 +44,7 @@ sealed class SocietasRequest : RequestInterface {
         override val method: HttpMethod
             get() = HttpMethod.Post
         override val path: String
-            get() = "/auth/signin"
+            get() = "api/auth/signin"
         override val parameters: RequestParameters
             get() = RequestParameters.Body(body)
         override val headers: Map<String, String>?
@@ -55,7 +55,7 @@ sealed class SocietasRequest : RequestInterface {
         override val method: HttpMethod
             get() = HttpMethod.Post
         override val path: String
-            get() = "/auth/signup"
+            get() = "api/auth/signup"
         override val parameters: RequestParameters
             get() = RequestParameters.Body(body)
         override val headers: Map<String, String>?

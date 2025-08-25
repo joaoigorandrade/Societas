@@ -22,8 +22,14 @@ suspend inline fun <reified T> ApiRepositoryInterface.execute(request: RequestIn
         val mapped = when (e) {
             is SerializationException -> NetworkException.SerializationError(e.message ?: "Serialization error")
             is ContentConvertException -> NetworkException.SerializationError(e.message ?: "Serialization error")
-            is ClientRequestException -> NetworkException.HttpError(e.response.status.value, e.message ?: "Client error")
-            is ServerResponseException -> NetworkException.HttpError(e.response.status.value, e.message ?: "Server error")
+            is ClientRequestException -> {
+                val errorBody = try { e.response.bodyAsText() } catch (ex: Exception) { null }
+                NetworkException.HttpError(e.response.status.value, e.message ?: "Client error", errorBody)
+            }
+            is ServerResponseException -> {
+                val errorBody = try { e.response.bodyAsText() } catch (ex: Exception) { null }
+                NetworkException.HttpError(e.response.status.value, e.message ?: "Server error", errorBody)
+            }
             is HttpRequestTimeoutException -> NetworkException.TimeoutError(e.message ?: "Request timeout")
             else -> NetworkException.UnknownError(e.message ?: "Unknown error occurred")
         }
