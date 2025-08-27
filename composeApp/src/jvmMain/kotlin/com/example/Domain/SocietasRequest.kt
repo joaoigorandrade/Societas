@@ -22,18 +22,18 @@ sealed class SocietasRequest : RequestInterface {
         override val method: HttpMethod
             get() = HttpMethod.Post
         override val path: String
-            get() = "/api/users/${body.userId}/chats/${body.chatId}/messages"
+            get() = "/api/chats/${body.chatId}/messages"
         override val parameters: RequestParameters
             get() = RequestParameters.Body(body)
         override val headers: Map<String, String>?
             get() = null
     }
 
-    data class GetMessages(val userId: String, val agentId: String) : SocietasRequest() {
+    data class GetMessages(val agentId: String) : SocietasRequest() {
         override val method: HttpMethod
             get() = HttpMethod.Get
         override val path: String
-            get() = "/api/users/$userId/chats/with/$agentId"
+            get() = "/api/chats/with/$agentId"
         override val parameters: RequestParameters
             get() = RequestParameters.None
         override val headers: Map<String, String>?

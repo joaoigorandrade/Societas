@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.Domain.Models.Auth.AuthApiResponse
 import com.example.Domain.Models.Auth.AuthRequest
+import com.example.Domain.Models.Auth.UserSession
+import com.example.Domain.Models.Auth.UserSessionData
 import com.example.Domain.UseCase.Auth.SignInUseCase
 import com.example.Domain.UseCase.Auth.SignUpUseCase
 import com.example.Navigation.api.Navigator
@@ -117,6 +119,12 @@ class AuthViewModel(
             is NetworkResult.Success -> {
                 val apiResponse = result.data
                 if (apiResponse.success && apiResponse.data != null) {
+                    UserSession.startSession(
+                        UserSessionData(
+                            userId = apiResponse.data.user.uid,
+                            token = apiResponse.data.token
+                        )
+                    )
                     _authState.value = AuthViewState.Success
                     navigator.replace(Route("home"))
                 } else {

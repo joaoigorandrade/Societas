@@ -8,8 +8,8 @@ import com.example.UI.Components.ChatMessage.SocietasChatModel
 
 class GetMessagesUseCase(private val repository: ApiRepositoryInterface) {
 
-    suspend fun execute(userId: String, agentId: String): NetworkResult<SocietasChatModel> {
-        val request = SocietasRequest.GetMessages(userId, agentId)
+    suspend fun execute(agentId: String): NetworkResult<SocietasChatModel> {
+        val request = SocietasRequest.GetMessages(agentId)
         return repository.execute(request)
     }
 }

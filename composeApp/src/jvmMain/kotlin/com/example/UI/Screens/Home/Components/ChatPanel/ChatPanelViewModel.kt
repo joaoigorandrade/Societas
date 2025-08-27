@@ -1,5 +1,6 @@
 package com.example.UI.Screens.Home.Components.ChatPanel
 
+import com.example.Domain.Models.Auth.UserSession
 import com.example.Domain.UseCase.Message.GetMessagesFromFirestoreUseCase
 import com.example.Domain.UseCase.Message.SendMessageUseCase
 import com.example.Networking.Core.NetworkResult
@@ -28,7 +29,8 @@ class ChatPanelViewModel(
     private val _isSendingMessage = MutableStateFlow(false)
     val isSendingMessage = _isSendingMessage.asStateFlow()
 
-    fun loadMessages(userId: String, agentId: String) {
+    fun loadMessages(agentId: String) {
+        val userId = UserSession.getUserId() ?: return
         scope.launch {
             getMessagesFromFirestoreUseCase.execute(userId, agentId)
                 .collect { result ->
@@ -50,18 +52,18 @@ class ChatPanelViewModel(
     }
 
     fun sendMessage(
-        userId: String,
         chatId: String,
         agentId: String,
         message: String
     ) {
+        val userId = UserSession.getUserId() ?: return
         scope.launch {
             _isSendingMessage.value = true
             val newMessage = SocietasChatModel.Message(text = message, author = userId)
             _messages.value = _messages.value + newMessage
 
             try {
-                when (val result = sendMessageUseCase.execute(userId, chatId, agentId, message)) {
+                when (val result = sendMessageUseCase.execute(chatId, agentId, message)) {
                     is NetworkResult.Success -> { }
                     is NetworkResult.Error -> {
                         _messages.value = _messages.value.filterNot { it == newMessage }

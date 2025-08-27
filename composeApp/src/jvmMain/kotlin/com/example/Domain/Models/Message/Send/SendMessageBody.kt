@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SendMessageBody(
-    val userId: String,
     val chatId: String,
     val agentId: String,
     val message: String

@@ -48,6 +48,15 @@ class NetworkingOperation(
             config.headers.forEach { (key, value) ->
                 header(key, value)
             }
+            // Add auth headers for non-auth requests
+            if (!url.encodedPath.contains("auth")) {
+                com.example.Domain.Models.Auth.UserSession.getToken()?.let { token ->
+                    header("Authorization", "Bearer " + token)
+                }
+                com.example.Domain.Models.Auth.UserSession.getUserId()?.let { userId ->
+                    header("X-User-Id", userId)
+                }
+            }
         }
     }
 

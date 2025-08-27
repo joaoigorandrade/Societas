@@ -41,7 +41,7 @@ fun SocietasChatMessage(
     val spacing = designSystem.spacing
     val colors = designSystem.colors
     
-    val isUserMessage = message.author == "6qDU3re3ejbpIdman0WL"
+    val isUserMessage = message.author == com.example.Domain.Models.Auth.UserSession.getUserId()
     
     // Animation state
     var isVisible by remember { mutableStateOf(false) }

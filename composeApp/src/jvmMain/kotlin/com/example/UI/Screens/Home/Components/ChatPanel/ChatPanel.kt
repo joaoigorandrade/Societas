@@ -50,10 +50,7 @@ fun ChatPanel(
 
     LaunchedEffect(selectedAgent) {
         selectedAgent?.let {
-            viewModel.loadMessages(
-                "6qDU3re3ejbpIdman0WL",
-                it.id
-            )
+            viewModel.loadMessages(it.id)
         }
     }
 
@@ -103,7 +100,6 @@ fun ChatPanel(
             modifier = Modifier.fillMaxWidth(),
             onSendMessage = {
                 viewModel.sendMessage(
-                    "6qDU3re3ejbpIdman0WL",
                     chatId = chatId,
                     agentId = selectedAgent?.id ?: "",
                     message = it
